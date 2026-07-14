@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>生词卡 {{ today }}</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --text: #17202a;
+      --muted: #667085;
+      --line: #d9dee7;
+      --accent: #2563eb;
+      --ok: #15803d;
+      --bad: #b42318;
+      --panel: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    main {
+      width: min(720px, 100%);
+      margin: 0 auto;
+      padding: 18px 14px 28px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 20px;
+      min-height: 72vh;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .word {
+      font-size: 36px;
+      line-height: 1.1;
+      font-weight: 750;
+    }
+    .word-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .audio-button {
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      border-radius: 999px;
+      background: #eef2f7;
+      color: var(--text);
+      font-size: 20px;
+      line-height: 1;
+    }
+    .audio-button:hover {
+      background: #dbe4f0;
+    }
+    .phonetic { color: var(--muted); font-size: 16px; }
+    .sentence {
+      font-size: 20px;
+      line-height: 1.55;
+    }
+    mark {
+      background: #fff2a8;
+      padding: 0 2px;
+    }
+    .hint { color: var(--muted); }
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 13px 15px;
+      font-size: 16px;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+    }
+    .options {
+      display: grid;
+      gap: 10px;
+    }
+    .option {
+      width: 100%;
+      text-align: left;
+      color: var(--text);
+      background: #f8fafc;
+      border: 1px solid var(--line);
+    }
+    .option.correct { border-color: var(--ok); color: var(--ok); background: #f0fdf4; }
+    .option.wrong { border-color: var(--bad); color: var(--bad); background: #fff1f2; }
+    .answer {
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+      display: grid;
+      gap: 12px;
+    }
+    .defs {
+      margin: 0;
+      padding-left: 20px;
+      color: #273444;
+      line-height: 1.45;
+    }
+    details {
+      color: var(--muted);
+    }
+    .nav {
+      margin-top: auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .secondary {
+      background: #e5e7eb;
+      color: var(--text);
+    }
+    footer {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+    .empty {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 28px;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <span>{{ today }}</span>
+    <span id="progress"></span>
+  </header>
+  <section id="app"></section>
+  <footer>待复习 {{ backlog }} · Dictionary data may include Wiktionary-derived CC BY-SA content.</footer>
+</main>
+<script>
+const cards = {{ cards_json | safe }};
+let index = 0;
+let stage = 1;
+let selected = null;
+
+const app = document.getElementById("app");
+const progress = document.getElementById("progress");
+
+function escapeHtml(text) {
+  return String(text ?? "").replace(/[&<>"']/g, ch => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+  }[ch]));
+}
+
+function highlight(sentence, word) {
+  const escaped = escapeHtml(sentence);
+  const re = new RegExp(`\\b(${word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})\\b`, "ig");
+  return escaped.replace(re, "<mark>$1</mark>");
+}
+
+function render() {
+  progress.textContent = cards.length ? `${index + 1} / ${cards.length}` : "0 / 0";
+  if (!cards.length) {
+    const pending = Number("{{ pending_enrichment }}");
+    app.innerHTML = `<div class="empty">${pending > 0 ? `有 ${pending} 个词正在补全，稍后刷新` : "今天还没有可复习的卡片"}</div>`;
+    return;
+  }
+  const card = cards[index];
+  const options = stage >= 2 ? `
+    <div class="options">
+      ${card.options.map((option, optionIndex) => {
+        const isCorrect = option === card.answer_zh;
+        const cls = stage === 3
+          ? isCorrect ? "option correct" : option === selected ? "option wrong" : "option"
+          : "option";
+        return `<button class="${cls}" data-option-index="${optionIndex}">${escapeHtml(option)}</button>`;
+      }).join("")}
+    </div>` : "";
+  const answer = stage === 3 ? `
+    <div class="answer">
+      <strong>正确答案：${escapeHtml(card.answer_zh)}</strong>
+      <ol class="defs">${(card.definitions || []).map(def => `<li>${escapeHtml(def)}</li>`).join("") || "<li>暂无词典释义</li>"}</ol>
+      <details><summary>原句中文</summary><p>${escapeHtml(card.trans_zh)}</p></details>
+    </div>` : "";
+  app.innerHTML = `
+    <article class="card">
+      <div>
+        <div class="word-row">
+          <div class="word">${escapeHtml(card.word)}</div>
+          ${card.audio_url ? `<button class="audio-button" data-play-audio aria-label="播放发音" title="播放发音">▶</button>` : ""}
+        </div>
+        <div class="phonetic">${escapeHtml(card.phonetic || "")}</div>
+      </div>
+      <div class="sentence">${highlight(card.sentence, card.word)}</div>
+      ${stage === 1 ? `<p class="hint">想一下它在这句话里是什么意思</p>` : ""}
+      ${options}
+      ${answer}
+      <div class="nav">
+        <button class="secondary" onclick="prevCard()" ${index === 0 ? "disabled" : ""}>上一张</button>
+        ${stage === 1 ? `<button onclick="showOptions()">看选项</button>` : ""}
+        ${stage === 3 ? `<button onclick="nextCard()">${index === cards.length - 1 ? "完成" : "下一张"}</button>` : ""}
+      </div>
+    </article>`;
+  document.querySelectorAll("[data-option-index]").forEach(button => {
+    button.addEventListener("click", () => {
+      chooseOption(card.options[Number(button.dataset.optionIndex)]);
+    });
+  });
+  document.querySelector("[data-play-audio]")?.addEventListener("click", () => {
+    playAudio(card.audio_url);
+  });
+  if (stage === 3 && card.audio_url) {
+    playAudio(card.audio_url);
+  }
+}
+
+function playAudio(url) {
+  if (!url) return;
+  new Audio(url).play().catch(() => {});
+}
+
+function showOptions() {
+  stage = 2;
+  render();
+}
+
+async function chooseOption(option) {
+  if (stage !== 2) return;
+  selected = option;
+  const card = cards[index];
+  const correct = option === card.answer_zh;
+  await fetch("/review/answer", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({word: card.word, correct})
+  });
+  stage = 3;
+  render();
+}
+
+function nextCard() {
+  if (index < cards.length - 1) {
+    index += 1;
+    stage = 1;
+    selected = null;
+    render();
+  } else {
+    app.innerHTML = `<div class="empty">今天完成了</div>`;
+    progress.textContent = `${cards.length} / ${cards.length}`;
+  }
+}
+
+function prevCard() {
+  if (index > 0) {
+    index -= 1;
+    stage = cards[index].answered ? 3 : 1;
+    selected = null;
+    render();
+  }
+}
+
+render();
+</script>
+</body>
+</html>

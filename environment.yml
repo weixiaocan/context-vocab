@@ -1,0 +1,8 @@
+name: p26-vocab-flashcard
+channels:
+  - defaults
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - -r server/requirements-dev.txt

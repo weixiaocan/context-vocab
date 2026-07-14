@@ -1,0 +1,8 @@
+daily_cards: 10
+daily_new_words: 5
+graduate_after: 3
+options_count: 4
+push_time: "08:00"
+db_path: "./data/vocab.db"
+dictionary_source: "merriam_webster_learners"
+timezone: "Asia/Shanghai"
