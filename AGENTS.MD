@@ -38,3 +38,14 @@ This is not about banning specific words like `揭秘`; it is about making the q
 - Do not add motivational mechanics, streaks, scoring systems, or broad language-learning features unless explicitly requested.
 - Prefer deterministic code and tests for deterministic behavior.
 - LLM output is cached content, but it is not automatically trustworthy. Add validation or manual correction paths when usage exposes repeatable quality failures.
+
+## Git Push Policy
+
+- Do not push after every small edit.
+- Prefer pushing at useful checkpoints:
+  - after completing a coherent feature, bug fix, or behavior change;
+  - after local tests or manual verification pass;
+  - before ending a work session if code was changed and the app is in a runnable state;
+  - during long sessions, roughly every 30-60 minutes when there is a stable checkpoint.
+- Avoid pushing broken or obviously unfinished intermediate states unless explicitly asked.
+- Keep commits small enough to understand, but not so small that every file tweak becomes a remote push.
