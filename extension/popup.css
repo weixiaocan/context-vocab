@@ -17,7 +17,28 @@
 .vocab-card-title {
   font-size: 20px;
   font-weight: 750;
+}
+
+.vocab-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin-right: 28px;
+}
+
+.vocab-card-audio {
+  border: 0;
+  padding: 2px;
+  background: transparent;
+  color: #2563eb;
+  cursor: pointer;
+  font-size: 17px;
+  line-height: 1;
+}
+
+.vocab-card-audio:disabled {
+  cursor: wait;
+  opacity: 0.45;
 }
 
 .vocab-card-meta,
@@ -50,6 +71,11 @@
   color: #fff;
   cursor: pointer;
   font-size: 14px;
+}
+
+.vocab-card-actions button:disabled {
+  cursor: default;
+  opacity: 0.65;
 }
 
 .vocab-card-close {

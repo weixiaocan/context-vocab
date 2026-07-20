@@ -1,13 +1,15 @@
 (function () {
   let popup = null;
   let lastSelection = null;
+  let lookupRequestId = 0;
 
-  document.addEventListener("mouseup", () => {
+  document.addEventListener("mouseup", event => {
+    if (event.target.closest?.(".vocab-card-popup")) return;
     window.setTimeout(handleSelection, 20);
   });
 
   document.addEventListener("keydown", event => {
-    if (event.key === "Escape") removePopup();
+    if (event.key === "Escape") dismissPopup();
   });
 
   async function handleSelection() {
@@ -15,21 +17,24 @@
     const raw = selection ? selection.toString().trim() : "";
     const word = normalizeWord(raw);
     if (!word) return;
+    const requestId = ++lookupRequestId;
 
     const range = selection.rangeCount ? selection.getRangeAt(0).cloneRange() : null;
     const rect = range ? range.getBoundingClientRect() : null;
     lastSelection = {
       word,
-      sentence: findSentence(selection.anchorNode, word),
+      sentence: findSentence(selection),
       sourceUrl: location.href
     };
 
     showPopup(rect, word, {loading: true});
     try {
-      const result = await window.VocabCardApi.lookupWord(word);
+      const result = await window.VocabCardApi.lookupWord(word, lastSelection.sentence);
+      if (requestId !== lookupRequestId) return;
       showPopup(rect, word, {entry: result});
     } catch (error) {
-      showPopup(rect, word, {error: "查词失败"});
+      if (requestId !== lookupRequestId) return;
+      showPopup(rect, word, {error: lookupErrorMessage(error)});
     }
   }
 
@@ -39,17 +44,26 @@
     return /^[a-z][a-z'-]{0,78}[a-z]$|^[a-z]$/.test(word) ? word : "";
   }
 
-  function findSentence(anchorNode, word) {
-    const container = anchorNode && anchorNode.nodeType === Node.TEXT_NODE
-      ? anchorNode.parentElement
-      : anchorNode;
-    const text = (container && container.innerText) || document.body.innerText || "";
-    const compact = text.replace(/\s+/g, " ").trim();
-    const index = compact.toLowerCase().indexOf(word.toLowerCase());
-    if (index < 0) return compact.slice(0, 500);
+  function findSentence(selection) {
+    if (!selection?.rangeCount) return "";
+    const range = selection.getRangeAt(0);
+    const startElement = range.startContainer.nodeType === Node.TEXT_NODE
+      ? range.startContainer.parentElement
+      : range.startContainer;
+    const container = startElement?.closest?.("p, li, blockquote, td, th, figcaption, pre, div")
+      || startElement
+      || document.body;
 
-    const before = compact.slice(0, index);
-    const after = compact.slice(index);
+    const beforeRange = document.createRange();
+    beforeRange.selectNodeContents(container);
+    beforeRange.setEnd(range.startContainer, range.startOffset);
+    const afterRange = document.createRange();
+    afterRange.selectNodeContents(container);
+    afterRange.setStart(range.endContainer, range.endOffset);
+
+    const before = compactText(beforeRange.toString());
+    const selected = compactText(range.toString());
+    const after = compactText(afterRange.toString());
     const start = Math.max(
       before.lastIndexOf("."),
       before.lastIndexOf("?"),
@@ -58,18 +72,22 @@
     ) + 1;
     const endCandidates = [after.indexOf("."), after.indexOf("?"), after.indexOf("!"), after.indexOf(";")]
       .filter(pos => pos >= 0);
-    const end = endCandidates.length ? index + Math.min(...endCandidates) + 1 : Math.min(compact.length, index + 240);
-    return compact.slice(start, end).trim();
+    const beforePart = before.slice(start).trimStart();
+    const afterEnd = endCandidates.length ? Math.min(...endCandidates) + 1 : Math.min(after.length, 240);
+    const afterPart = after.slice(0, afterEnd).trimEnd();
+    const afterSeparator = /^[,.:;!?]/.test(afterPart) ? "" : " ";
+    return compactText(`${beforePart} ${selected}${afterSeparator}${afterPart}`).slice(0, 2000);
+  }
+
+  function compactText(text) {
+    return String(text || "").replace(/\s+/g, " ").trim();
   }
 
   function showPopup(rect, word, state) {
     removePopup();
     popup = document.createElement("div");
     popup.className = "vocab-card-popup";
-    const top = rect ? rect.bottom + window.scrollY + 8 : window.scrollY + 80;
-    const left = rect ? Math.min(rect.left + window.scrollX, window.scrollX + window.innerWidth - 330) : window.scrollX + 24;
-    popup.style.top = `${Math.max(top, 12)}px`;
-    popup.style.left = `${Math.max(left, 12)}px`;
+    popup.style.visibility = "hidden";
 
     if (state.loading) {
       popup.innerHTML = `<div class="vocab-card-title">${escapeHtml(word)}</div><div class="vocab-card-muted">查词中...</div>`;
@@ -79,49 +97,156 @@
       popup.innerHTML = popupHtml(word, `<div class="vocab-card-muted">查不到</div>`);
     } else {
       const entry = state.entry;
+      const audioButton = `<button class="vocab-card-audio" type="button" data-action="play" aria-label="播放 ${escapeHtml(word)} 的发音" title="${entry.audioUrl ? "音频加载中" : "使用浏览器语音播放"}" ${entry.audioUrl ? "disabled" : ""}>🔊</button>`;
       popup.innerHTML = popupHtml(word, `
         <div class="vocab-card-meta">${escapeHtml(entry.phonetic || "")} ${escapeHtml(entry.partOfSpeech || "")}</div>
         <ol>${entry.definitions.map(def => `<li>${escapeHtml(def)}</li>`).join("") || "<li>暂无释义</li>"}</ol>
         <div class="vocab-card-actions">
-          ${entry.audioUrl ? `<button data-action="play">发音</button>` : ""}
-          <button data-action="collect">加入生词本</button>
+          <button type="button" data-action="collect" ${entry.collected ? "disabled" : ""}>${entry.collected ? "已加入" : "加入生词本"}</button>
         </div>
         <div class="vocab-card-status"></div>
-      `);
-      popup.querySelector('[data-action="play"]')?.addEventListener("click", () => {
-        new Audio(entry.audioUrl).play().catch(() => {});
-      });
+      `, audioButton);
+      const playButton = popup.querySelector('[data-action="play"]');
+      if (playButton) {
+        if (!entry.audioUrl) {
+          playButton.addEventListener("click", event => {
+            event.stopPropagation();
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = "en-US";
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(utterance);
+          });
+        } else {
+        let audioContext = null;
+        let audioBuffer = null;
+        window.VocabCardApi.loadAudio(entry.audioUrl).then(async audioData => {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContext) throw new Error("Web Audio API is unavailable");
+          audioContext = new AudioContext();
+          audioBuffer = await audioContext.decodeAudioData(audioData);
+          playButton.disabled = false;
+          playButton.title = "播放发音";
+        }).catch(error => {
+          playButton.title = "音频加载失败";
+          const status = popup?.querySelector(".vocab-card-status");
+          if (status) status.textContent = isInvalidExtensionContext(error)
+            ? "插件已更新，请刷新页面"
+            : "发音加载失败";
+          console.warn("Vocab Card audio loading failed", error);
+        });
+        playButton.addEventListener("click", event => {
+          event.stopPropagation();
+          if (!audioContext || !audioBuffer) return;
+          audioContext.resume().then(() => {
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(audioContext.destination);
+            source.start(0);
+            const status = popup?.querySelector(".vocab-card-status");
+            if (status) status.textContent = "";
+          }).catch(error => {
+            const status = popup?.querySelector(".vocab-card-status");
+            if (status) status.textContent = "发音播放失败";
+            console.warn("Vocab Card audio playback failed", error);
+          });
+        });
+        }
+      }
       popup.querySelector('[data-action="collect"]')?.addEventListener("click", collectCurrentWord);
     }
 
     document.body.appendChild(popup);
+    positionPopup(rect);
+    popup.style.visibility = "visible";
   }
 
-  function popupHtml(word, body) {
+  function positionPopup(rect) {
+    if (!popup) return;
+    const margin = 12;
+    const gap = 8;
+    const popupRect = popup.getBoundingClientRect();
+    const preferredLeft = rect ? rect.left + window.scrollX : window.scrollX + 24;
+    const maxLeft = window.scrollX + window.innerWidth - popupRect.width - margin;
+    const left = Math.max(window.scrollX + margin, Math.min(preferredLeft, maxLeft));
+
+    let top = rect ? rect.bottom + window.scrollY + gap : window.scrollY + 80;
+    const viewportBottom = window.scrollY + window.innerHeight - margin;
+    if (rect && top + popupRect.height > viewportBottom) {
+      top = rect.top + window.scrollY - popupRect.height - gap;
+    }
+    top = Math.max(window.scrollY + margin, top);
+
+    popup.style.left = `${left}px`;
+    popup.style.top = `${top}px`;
+  }
+
+  function popupHtml(word, body, titleExtra = "") {
     return `
       <button class="vocab-card-close" type="button" aria-label="Close">×</button>
-      <div class="vocab-card-title">${escapeHtml(word)}</div>
+      <div class="vocab-card-heading">
+        <div class="vocab-card-title">${escapeHtml(word)}</div>
+        ${titleExtra}
+      </div>
       ${body}
     `;
   }
 
-  async function collectCurrentWord() {
+  async function collectCurrentWord(event) {
+    event?.stopPropagation();
     if (!lastSelection || !popup) return;
     const status = popup.querySelector(".vocab-card-status");
+    const button = popup.querySelector('[data-action="collect"]');
+    if (button?.disabled) return;
+    if (button) button.disabled = true;
     status.textContent = "入库中...";
     try {
       await window.VocabCardApi.collectWord(lastSelection);
-      status.textContent = "已加入";
+      status.textContent = "";
+      if (button) button.textContent = "已加入";
     } catch (error) {
-      status.textContent = "入库失败";
+      status.textContent = isInvalidExtensionContext(error)
+        ? "插件已更新，请刷新页面"
+        : isNetworkError(error)
+          ? "无法连接生词本服务器"
+          : "入库失败";
+      if (button) button.disabled = false;
     }
+  }
+
+  function isInvalidExtensionContext(error) {
+    const message = String(error?.message || error || "");
+    return message.includes("EXTENSION_CONTEXT_INVALID")
+      || message.includes("Extension context invalidated");
+  }
+
+  function isNetworkError(error) {
+    const message = String(error?.message || error || "");
+    return error instanceof TypeError
+      || message.includes("Failed to fetch")
+      || message.includes("NetworkError");
+  }
+
+  function lookupErrorMessage(error) {
+    if (isInvalidExtensionContext(error)) return "插件已更新，请刷新页面";
+    if (isNetworkError(error)) return "网络或词典服务不可用";
+    return "查词服务暂时不可用";
   }
 
   document.addEventListener("click", event => {
     if (event.target.classList && event.target.classList.contains("vocab-card-close")) {
-      removePopup();
+      event.stopPropagation();
+      dismissPopup();
+      return;
     }
+    if (popup && !popup.contains(event.target)) dismissPopup();
   });
+
+  function dismissPopup() {
+    lookupRequestId += 1;
+    removePopup();
+    const selection = window.getSelection();
+    if (selection) selection.removeAllRanges();
+  }
 
   function removePopup() {
     if (popup) {

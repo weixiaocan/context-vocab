@@ -72,6 +72,21 @@ def test_collect_duplicate_appends_sentence_and_resets_progress(conn, settings):
     assert count["count"] == 2
 
 
+def test_collect_same_sentence_is_idempotent(conn, settings):
+    first_id = deck.collect_word(conn, settings, "Warranted", "The complexity is warranted.", "https://a.test")
+    conn.execute("UPDATE words SET remaining = 1, status = 'active' WHERE word = 'warranted'")
+    conn.commit()
+
+    second_id = deck.collect_word(conn, settings, "warranted", "  The complexity is warranted.  ", "https://a.test")
+
+    word = conn.execute("SELECT remaining, status FROM words WHERE word = 'warranted'").fetchone()
+    count = conn.execute("SELECT COUNT(*) AS count FROM sentences WHERE word = 'warranted'").fetchone()
+    assert second_id == first_id
+    assert count["count"] == 1
+    assert word["remaining"] == 1
+    assert word["status"] == "active"
+
+
 def test_daily_deck_is_stable_and_uses_enriched_pending_words(conn, settings):
     for raw_word in ["marginal", "tractable", "ablation"]:
         sentence_id = deck.collect_word(conn, settings, raw_word, f"{raw_word} sentence.", None)
@@ -121,3 +136,26 @@ def test_answer_wrong_does_not_decrement(conn, settings):
 
     assert word["remaining"] == 3
     assert word["status"] == "active"
+
+
+def test_cumulative_counts_only_answered_dates_and_graduated_words(conn, settings):
+    for word in ["marginal", "tractable"]:
+        sentence_id = deck.collect_word(conn, settings, word, f"{word} sentence.", None)
+        mark_enriched(conn, sentence_id)
+        conn.execute("UPDATE words SET status = 'active' WHERE word = ?", (word,))
+        conn.execute(
+            "INSERT INTO daily_deck (date, word, sentence_id, is_new, answered) VALUES (?, ?, ?, 0, ?)",
+            ("2026-07-12", word, sentence_id, 1 if word == "marginal" else 0),
+        )
+    tractable_id = conn.execute(
+        "SELECT id FROM sentences WHERE word = 'tractable'"
+    ).fetchone()["id"]
+    conn.execute(
+        "INSERT INTO daily_deck (date, word, sentence_id, is_new, answered) VALUES (?, ?, ?, 0, 1)",
+        ("2026-07-13", "tractable", tractable_id),
+    )
+    conn.execute("UPDATE words SET status = 'graduated' WHERE word = 'marginal'")
+    conn.commit()
+
+    assert deck.cumulative_completed_days(conn) == 2
+    assert deck.cumulative_graduated_count(conn) == 1

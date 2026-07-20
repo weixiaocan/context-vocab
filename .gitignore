@@ -4,3 +4,4 @@ __pycache__/
 .venv/
 server/.env
 server/data/
+server/uvicorn.*.log

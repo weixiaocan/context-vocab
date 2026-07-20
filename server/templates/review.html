@@ -3,163 +3,302 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>生词卡 {{ today }}</title>
+  <title>生词卡 · {{ today }}</title>
   <style>
     :root {
       color-scheme: light;
-      --bg: #f6f7f9;
-      --text: #17202a;
-      --muted: #667085;
-      --line: #d9dee7;
-      --accent: #2563eb;
-      --ok: #15803d;
-      --bad: #b42318;
-      --panel: #ffffff;
+      --accent: #E85D26;
+      --text: #171717;
+      --muted: #737373;
+      --line: #D8D8D5;
+      --surface: #F4F3EE;
+      --correct-border: #1D9E75;
+      --correct-bg: #E1F5EE;
+      --correct-text: #085041;
+      --wrong-border: #E24B4A;
+      --wrong-bg: #FCEBEB;
+      --wrong-text: #791F1F;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
+      background: #F5F5F1;
       color: var(--text);
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
     }
+    button { font: inherit; }
     main {
-      width: min(720px, 100%);
+      width: min(560px, 100%);
       margin: 0 auto;
-      padding: 18px 14px 28px;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 14px;
-      color: var(--muted);
-      font-size: 14px;
+      padding: 12px 12px 26px;
     }
     .card {
-      background: var(--panel);
+      position: relative;
+      overflow: hidden;
+      padding: 38px 20px 24px;
       border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 20px;
-      min-height: 72vh;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
+      border-radius: 10px;
+      background: #fff;
     }
-    .word {
-      font-size: 36px;
-      line-height: 1.1;
-      font-weight: 750;
+    .progress {
+      position: absolute;
+      inset: 0 0 auto;
+      display: grid;
+      grid-template-columns: repeat(var(--segments), 1fr);
+      gap: 0;
+      height: 3px;
+      overflow: hidden;
     }
+    .progress-segment { background: #E6E6E3; }
+    .progress-segment.done { background: var(--accent); }
     .word-row {
       display: flex;
       align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .word {
+      overflow-wrap: anywhere;
+      font-size: 38px;
+      font-weight: 400;
+      line-height: 1.15;
     }
     .audio-button {
-      width: 42px;
-      height: 42px;
+      display: inline-grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
       padding: 0;
-      border-radius: 999px;
-      background: #eef2f7;
-      color: var(--text);
-      font-size: 20px;
-      line-height: 1;
+      border: 0;
+      background: transparent;
+      color: var(--accent);
+      cursor: pointer;
     }
-    .audio-button:hover {
-      background: #dbe4f0;
+    .audio-button svg { width: 18px; height: 18px; }
+    .phonetic {
+      min-height: 18px;
+      margin-top: 7px;
+      color: var(--muted);
+      font: 14px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
     }
-    .phonetic { color: var(--muted); font-size: 16px; }
     .sentence {
-      font-size: 20px;
+      margin-top: 22px;
+      padding: 14px 17px;
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 18px;
       line-height: 1.55;
     }
     mark {
-      background: #fff2a8;
-      padding: 0 2px;
-    }
-    .hint { color: var(--muted); }
-    button {
-      border: 0;
-      border-radius: 8px;
-      padding: 13px 15px;
-      font-size: 16px;
-      background: var(--accent);
-      color: #fff;
-      cursor: pointer;
+      border-bottom: 2px solid var(--accent);
+      background: transparent;
+      color: var(--accent);
+      font-weight: 500;
     }
     .options {
       display: grid;
       gap: 10px;
+      margin-top: 26px;
     }
     .option {
-      width: 100%;
-      text-align: left;
-      color: var(--text);
-      background: #f8fafc;
-      border: 1px solid var(--line);
-    }
-    .option.correct { border-color: var(--ok); color: var(--ok); background: #f0fdf4; }
-    .option.wrong { border-color: var(--bad); color: var(--bad); background: #fff1f2; }
-    .answer {
-      border-top: 1px solid var(--line);
-      padding-top: 14px;
-      display: grid;
-      gap: 12px;
-    }
-    .defs {
-      margin: 0;
-      padding-left: 20px;
-      color: #273444;
-      line-height: 1.45;
-    }
-    details {
-      color: var(--muted);
-    }
-    .nav {
-      margin-top: auto;
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      gap: 10px;
-    }
-    .secondary {
-      background: #e5e7eb;
-      color: var(--text);
-    }
-    footer {
-      margin-top: 12px;
-      color: var(--muted);
-      font-size: 12px;
-      text-align: center;
-    }
-    .empty {
-      background: var(--panel);
+      width: 100%;
+      min-height: 58px;
+      padding: 15px 18px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      padding: 28px;
+      background: #fff;
+      color: var(--text);
+      text-align: left;
+      font-size: 18px;
+      line-height: 1.45;
+      cursor: pointer;
+      transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 100ms ease;
+    }
+    .option:not(:disabled):hover,
+    .option:not(:disabled):focus-visible {
+      border-color: #BABAB6;
+      background: #FAFAF8;
+      outline: none;
+    }
+    .option:not(:disabled):active { transform: translateY(1px); }
+    .option:disabled { cursor: default; opacity: 1; }
+    .option-text { min-width: 0; overflow-wrap: anywhere; }
+    .option.muted { color: #999; }
+    .option.correct {
+      border-color: var(--correct-border);
+      background: var(--correct-bg);
+      color: var(--correct-text);
+    }
+    .option.correct::after { flex: 0 0 auto; margin-left: 12px; font-size: 21px; content: "✓"; }
+    .option.wrong {
+      border-color: var(--wrong-border);
+      background: var(--wrong-bg);
+      color: var(--wrong-text);
+    }
+    .option.wrong::after { flex: 0 0 auto; margin-left: 12px; font-size: 20px; content: "×"; }
+    .answer {
+      display: grid;
+      gap: 12px;
+      margin-top: 24px;
+      padding: 24px 0 0;
+      border-top: 1px solid var(--line);
+      animation: reveal 220ms ease-out;
+    }
+    @keyframes reveal {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .answer-label {
+      display: none;
+    }
+    .pos-tag {
+      justify-self: start;
+      padding: 3px 7px;
+      border-radius: 4px;
+      background: #FAECE7;
+      color: #993C1D;
+      font-size: 12px;
+      line-height: 1.3;
+    }
+    .defs {
+      display: grid;
+      gap: 5px;
+      margin: 0;
+      padding-left: 0;
+      color: var(--text);
+      font-size: 17px;
+      line-height: 1.6;
+      list-style: none;
+    }
+    details { margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--line); color: var(--muted); font-size: 16px; }
+    summary { min-height: 48px; padding: 14px 2px; cursor: pointer; }
+    details p { margin: 0; line-height: 1.6; }
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 22px;
+    }
+    .nav-button {
+      min-width: 104px;
+      min-height: 46px;
+      padding: 10px 16px;
+      border: 1px solid #BDBDB8;
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .nav-button:disabled { opacity: 0.35; cursor: default; }
+    .nav-button.primary { margin-left: auto; border-color: var(--accent); color: var(--accent); }
+    footer {
+      margin-top: 20px;
       color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
       text-align: center;
+    }
+    .empty { padding: 36px 18px; color: var(--muted); text-align: center; }
+    .complete {
+      position: relative;
+      padding: 38px 20px 28px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      text-align: center;
+    }
+    .complete h1 {
+      margin: 0;
+      color: var(--accent);
+      font-size: 38px;
+      font-weight: 400;
+      line-height: 1.2;
+    }
+    .complete-date { margin-top: 8px; color: var(--muted); font-size: 14px; }
+    .today-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 40px;
+    }
+    .stat {
+      min-width: 0;
+      padding: 20px 6px;
+      border-radius: 8px;
+      background: var(--surface);
+      text-align: center;
+    }
+    .stat strong {
+      display: block;
+      font-size: 32px;
+      font-weight: 400;
+      line-height: 1.05;
+    }
+    .stat:nth-child(2) strong { color: var(--correct-text); }
+    .stat:nth-child(3) strong { color: var(--accent); }
+    .stat span { display: block; margin-top: 6px; color: var(--muted); font-size: 14px; }
+    .graduates {
+      margin-top: 40px;
+      padding: 0;
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    .graduates small { display: block; margin-top: 6px; color: var(--muted); font-size: 14px; }
+    .cumulative { margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .again-button { margin-top: 28px; }
+    #confetti-canvas { position: fixed !important; inset: 0; pointer-events: none !important; z-index: 10 !important; }
+    @media (min-width: 560px) {
+      main { padding: 34px 18px 28px; }
+      .card { padding: 46px 32px 32px; }
+      .complete { padding: 48px 34px 34px; }
+    }
+    @media (max-width: 380px) {
+      .word { font-size: 34px; }
+      .today-stats { gap: 8px; }
+      .stat strong { font-size: 34px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .answer { animation: none; }
     }
   </style>
 </head>
 <body>
+<canvas id="confetti-canvas" aria-hidden="true"></canvas>
 <main>
-  <header>
-    <span>{{ today }}</span>
-    <span id="progress"></span>
-  </header>
   <section id="app"></section>
   <footer>待复习 {{ backlog }} · Dictionary data may include Wiktionary-derived CC BY-SA content.</footer>
 </main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.9.3/confetti.browser.min.js"></script>
 <script>
 const cards = {{ cards_json | safe }};
-let index = 0;
-let stage = 1;
+const today = {{ today | tojson }};
+const cumulativeDays = Number({{ cumulative_days }});
+const cumulativeGraduated = Number({{ cumulative_graduated }});
+const previewMode = new URLSearchParams(window.location.search).get("preview") === "1";
+const confettiEffect = typeof confetti === "function"
+  ? confetti.create(document.getElementById("confetti-canvas"), {resize: true, useWorker: true})
+  : null;
+let index = Math.max(0, cards.findIndex(card => !card.answered));
+let answered = cards[index]?.answered || false;
 let selected = null;
+let advancing = false;
+const selections = new Map();
+
+if (previewMode) {
+  cards.forEach(card => {
+    card.answered = false;
+    card.correct = null;
+  });
+  index = 0;
+  answered = false;
+}
 
 const app = document.getElementById("app");
-const progress = document.getElementById("progress");
 
 function escapeHtml(text) {
   return String(text ?? "").replace(/[&<>"']/g, ch => ({
@@ -168,113 +307,184 @@ function escapeHtml(text) {
 }
 
 function highlight(sentence, word) {
-  const escaped = escapeHtml(sentence);
-  const re = new RegExp(`\\b(${word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})\\b`, "ig");
-  return escaped.replace(re, "<mark>$1</mark>");
+  const englishSentence = String(sentence ?? "").replace(/\s*[\u3400-\u9fff][\s\S]*$/, "").trim();
+  const escaped = escapeHtml(englishSentence);
+  const safeWord = String(word).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return escaped.replace(new RegExp(`\\b(${safeWord})\\b`, "ig"), "<mark>$1</mark>");
 }
 
-function render() {
-  progress.textContent = cards.length ? `${index + 1} / ${cards.length}` : "0 / 0";
-  if (!cards.length) {
-    const pending = Number("{{ pending_enrichment }}");
-    app.innerHTML = `<div class="empty">${pending > 0 ? `有 ${pending} 个词正在补全，稍后刷新` : "今天还没有可复习的卡片"}</div>`;
+function progressHtml(completed) {
+  return `<div class="progress" style="--segments:${cards.length}" aria-label="已完成 ${completed} / ${cards.length}">
+    ${cards.map((_, i) => `<span class="progress-segment ${i < completed ? "done" : ""}"></span>`).join("")}
+  </div>`;
+}
+
+function speakerIcon() {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18 6a8.5 8.5 0 0 1 0 12"/></svg>`;
+}
+
+function renderCard() {
+  const card = cards[index];
+  const options = card.options.map((option, optionIndex) => {
+    let state = "";
+    if (answered) {
+      if (option === card.answer_zh) state = "correct";
+      else if (option === selected) state = "wrong";
+      else state = "muted";
+    }
+    return `<button class="option ${state}" data-option-index="${optionIndex}" ${answered ? "disabled" : ""}><span class="option-text">${escapeHtml(option)}</span></button>`;
+  }).join("");
+  const answer = answered ? `<div class="answer">
+    <div class="answer-label">${escapeHtml(card.answer_zh)}</div>
+    ${card.part_of_speech ? `<span class="pos-tag">${escapeHtml(card.part_of_speech)}</span>` : ""}
+    <ol class="defs">${(card.definitions || []).map(def => `<li>${escapeHtml(def)}</li>`).join("") || "<li>暂无词典释义</li>"}</ol>
+    <details><summary>原句中文</summary><p>${escapeHtml(card.trans_zh)}</p></details>
+  </div>` : "";
+  const navigation = `<div class="nav">
+    ${index > 0 ? `<button class="nav-button" data-previous>上一张</button>` : ""}
+    <button class="nav-button primary" data-next ${answered ? "" : "disabled"}>${index === cards.length - 1 ? "完成" : "下一张"}</button>
+  </div>`;
+
+  app.innerHTML = `<article class="card">
+    ${progressHtml(index + (answered ? 1 : 0))}
+    <div class="word-row">
+      <div class="word">${escapeHtml(card.word)}</div>
+      <button class="audio-button" data-play-audio aria-label="重播发音" title="${card.audio_url ? "播放词典发音" : "使用系统语音播放"}">${speakerIcon()}</button>
+    </div>
+    <div class="phonetic">${escapeHtml(card.phonetic || "")}</div>
+    <div class="sentence">${highlight(card.sentence, card.word)}</div>
+    <div class="options">${options}</div>
+    ${answer}
+    ${navigation}
+  </article>`;
+
+  document.querySelectorAll("[data-option-index]").forEach(button => {
+    button.addEventListener("click", () => chooseOption(card.options[Number(button.dataset.optionIndex)]));
+  });
+  document.querySelector("[data-play-audio]")?.addEventListener("click", () => playAudio(card.audio_url, card.word));
+  document.querySelector("[data-previous]")?.addEventListener("click", goPrevious);
+  document.querySelector("[data-next]")?.addEventListener("click", goNext);
+}
+
+function playAudio(url, word) {
+  if (!url) {
+    speakWord(word);
     return;
   }
-  const card = cards[index];
-  const options = stage >= 2 ? `
-    <div class="options">
-      ${card.options.map((option, optionIndex) => {
-        const isCorrect = option === card.answer_zh;
-        const cls = stage === 3
-          ? isCorrect ? "option correct" : option === selected ? "option wrong" : "option"
-          : "option";
-        return `<button class="${cls}" data-option-index="${optionIndex}">${escapeHtml(option)}</button>`;
-      }).join("")}
-    </div>` : "";
-  const answer = stage === 3 ? `
-    <div class="answer">
-      <strong>正确答案：${escapeHtml(card.answer_zh)}</strong>
-      <ol class="defs">${(card.definitions || []).map(def => `<li>${escapeHtml(def)}</li>`).join("") || "<li>暂无词典释义</li>"}</ol>
-      <details><summary>原句中文</summary><p>${escapeHtml(card.trans_zh)}</p></details>
-    </div>` : "";
-  app.innerHTML = `
-    <article class="card">
-      <div>
-        <div class="word-row">
-          <div class="word">${escapeHtml(card.word)}</div>
-          ${card.audio_url ? `<button class="audio-button" data-play-audio aria-label="播放发音" title="播放发音">▶</button>` : ""}
-        </div>
-        <div class="phonetic">${escapeHtml(card.phonetic || "")}</div>
-      </div>
-      <div class="sentence">${highlight(card.sentence, card.word)}</div>
-      ${stage === 1 ? `<p class="hint">想一下它在这句话里是什么意思</p>` : ""}
-      ${options}
-      ${answer}
-      <div class="nav">
-        <button class="secondary" onclick="prevCard()" ${index === 0 ? "disabled" : ""}>上一张</button>
-        ${stage === 1 ? `<button onclick="showOptions()">看选项</button>` : ""}
-        ${stage === 3 ? `<button onclick="nextCard()">${index === cards.length - 1 ? "完成" : "下一张"}</button>` : ""}
-      </div>
-    </article>`;
-  document.querySelectorAll("[data-option-index]").forEach(button => {
-    button.addEventListener("click", () => {
-      chooseOption(card.options[Number(button.dataset.optionIndex)]);
-    });
-  });
-  document.querySelector("[data-play-audio]")?.addEventListener("click", () => {
-    playAudio(card.audio_url);
-  });
-  if (stage === 3 && card.audio_url) {
-    playAudio(card.audio_url);
-  }
+  new Audio(url).play().catch(() => speakWord(word));
 }
 
-function playAudio(url) {
-  if (!url) return;
-  new Audio(url).play().catch(() => {});
-}
-
-function showOptions() {
-  stage = 2;
-  render();
+function speakWord(word) {
+  if (!word || !("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) return;
+  const utterance = new SpeechSynthesisUtterance(word);
+  utterance.lang = "en-US";
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
 }
 
 async function chooseOption(option) {
-  if (stage !== 2) return;
-  selected = option;
+  if (answered || advancing) return;
+  advancing = true;
   const card = cards[index];
   const correct = option === card.answer_zh;
-  await fetch("/review/answer", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({word: card.word, correct})
-  });
-  stage = 3;
-  render();
+  try {
+    let result = {};
+    if (!previewMode) {
+      const response = await fetch("/review/answer", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({word: card.word, correct})
+      });
+      if (!response.ok) throw new Error("answer request failed");
+      result = await response.json();
+    }
+    card.answered = true;
+    card.correct = correct;
+    card.status = result.status || card.status;
+    selected = option;
+    selections.set(card.word, option);
+    answered = true;
+    advancing = false;
+    renderCard();
+    playAudio(card.audio_url, card.word);
+  } catch (error) {
+    advancing = false;
+  }
 }
 
-function nextCard() {
+function goNext() {
+  if (!answered) return;
   if (index < cards.length - 1) {
     index += 1;
-    stage = 1;
-    selected = null;
-    render();
+    selected = selections.get(cards[index].word) || (cards[index].correct ? cards[index].answer_zh : null);
+    answered = cards[index].answered;
+    advancing = false;
+    renderCard();
+    window.scrollTo({top: 0, behavior: "smooth"});
+    return;
+  }
+  if (previewMode) {
+    renderComplete();
   } else {
-    app.innerHTML = `<div class="empty">今天完成了</div>`;
-    progress.textContent = `${cards.length} / ${cards.length}`;
+    window.location.reload();
   }
 }
 
-function prevCard() {
-  if (index > 0) {
-    index -= 1;
-    stage = cards[index].answered ? 3 : 1;
-    selected = null;
-    render();
-  }
+function goPrevious() {
+  if (index === 0) return;
+  index -= 1;
+  selected = selections.get(cards[index].word) || (cards[index].correct ? cards[index].answer_zh : null);
+  answered = cards[index].answered;
+  advancing = false;
+  renderCard();
+  window.scrollTo({top: 0, behavior: "smooth"});
 }
 
-render();
+function renderComplete() {
+  const reviewed = cards.filter(card => card.answered);
+  const correct = reviewed.filter(card => card.correct).length;
+  const graduates = reviewed.filter(card => card.status === "graduated").map(card => card.word);
+  const graduateCopy = graduates.length ? `<div class="graduates">
+    ${escapeHtml(formatWordList(graduates))}毕业了
+    <small>下次在文章里见到它们，你会认得</small>
+  </div>` : "";
+  app.innerHTML = `<section class="complete">
+    <h1>今天完成了</h1>
+    <div class="complete-date">${escapeHtml(today)}</div>
+    <div class="today-stats">
+      <div class="stat"><strong>${reviewed.length}</strong><span>刷了</span></div>
+      <div class="stat"><strong>${correct}</strong><span>答对</span></div>
+      <div class="stat"><strong>${graduates.length}</strong><span>毕业</span></div>
+    </div>
+    ${graduateCopy}
+    <div class="cumulative">累计完成 ${cumulativeDays} 天 · 累计毕业 ${cumulativeGraduated} 个词</div>
+    <button class="nav-button again-button" onclick="window.location.href='/review?preview=1'">再来一次</button>
+  </section>`;
+  fireConfetti();
+}
+
+function formatWordList(words) {
+  if (words.length < 2) return words[0] || "";
+  return `${words.slice(0, -1).join("、")} 和 ${words.at(-1)} `;
+}
+
+function fireConfetti() {
+  if (!confettiEffect || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const colors = ["#E85D26", "#EF9F27", "#1D9E75", "#7F77DD", "#D4537E"];
+  const shoot = origin => confettiEffect({particleCount: 55, spread: 60, startVelocity: 45, origin, colors, disableForReducedMotion: true});
+  shoot({x: 0, y: 0.72});
+  shoot({x: 1, y: 0.72});
+  window.setTimeout(() => shoot({x: 0.5, y: 0.35}), 260);
+}
+
+if (!cards.length) {
+  const pending = Number("{{ pending_enrichment }}");
+  app.innerHTML = `<div class="empty">${pending > 0 ? `有 ${pending} 个词正在补全，稍后刷新` : "今天还没有可复习的卡片"}</div>`;
+} else if (cards.every(card => card.answered)) {
+  renderComplete();
+} else {
+  renderCard();
+}
 </script>
 </body>
 </html>

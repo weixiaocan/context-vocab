@@ -1,15 +1,24 @@
 (function () {
   const DEFAULT_SERVER_URL = "http://127.0.0.1:8001";
 
+  function ensureExtensionContext() {
+    if (!globalThis.chrome?.runtime?.id) {
+      throw new Error("EXTENSION_CONTEXT_INVALID");
+    }
+  }
+
   async function getServerUrl() {
+    ensureExtensionContext();
     const stored = await chrome.storage.sync.get(["serverUrl"]);
     return (stored.serverUrl || DEFAULT_SERVER_URL).replace(/\/$/, "");
   }
 
-  async function lookupWord(word) {
+  async function lookupWord(word, sentence = "") {
     try {
       const serverUrl = await getServerUrl();
-      const response = await fetch(`${serverUrl}/dictionary/lookup?word=${encodeURIComponent(word)}`);
+      const params = new URLSearchParams({word});
+      if (sentence) params.set("sentence", sentence);
+      const response = await fetch(`${serverUrl}/dictionary/lookup?${params.toString()}`);
       if (response.ok) return response.json();
       if (response.status !== 404) throw new Error(`Backend dictionary failed: ${response.status}`);
     } catch (error) {
@@ -40,7 +49,8 @@
       partOfSpeech: meaning.partOfSpeech || "",
       definitions,
       phonetic,
-      audioUrl
+      audioUrl,
+      collected: false
     };
   }
 
@@ -55,5 +65,17 @@
     return response.json();
   }
 
-  window.VocabCardApi = {lookupWord, collectWord};
+  async function loadAudio(audioUrl) {
+    ensureExtensionContext();
+    const result = await chrome.runtime.sendMessage({type: "loadAudio", audioUrl});
+    if (!result?.ok) throw new Error(result?.error || "Audio request failed");
+    const binary = atob(result.base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+    return bytes.buffer;
+  }
+
+  window.VocabCardApi = {lookupWord, collectWord, loadAudio};
 })();

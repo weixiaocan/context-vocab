@@ -86,3 +86,20 @@ def test_parse_merriam_webster_learners_entry():
 
 def test_parse_merriam_webster_suggestion_list_returns_none():
     assert parse_merriam_webster(["demystify", "mystify"]) is None
+
+
+def test_parse_merriam_webster_uses_alternate_pronunciation_without_audio():
+    payload = [
+        {
+            "meta": {"id": "warrant:2"},
+            "hwi": {"hw": "warrant", "altprs": [{"ipa": "ˈworənt"}]},
+            "fl": "verb",
+            "shortdef": ["to require or deserve (something)"],
+        }
+    ]
+
+    entry = parse_merriam_webster(payload)
+
+    assert entry is not None
+    assert entry.phonetic == "ˈworənt"
+    assert entry.audio_url is None

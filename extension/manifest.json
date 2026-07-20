@@ -4,6 +4,9 @@
   "version": "0.1.0",
   "description": "划词查词，并把想记住的词加入生词卡。",
   "permissions": ["storage"],
+  "background": {
+    "service_worker": "background.js"
+  },
   "host_permissions": [
     "https://api.dictionaryapi.dev/*",
     "http://127.0.0.1:8000/*",

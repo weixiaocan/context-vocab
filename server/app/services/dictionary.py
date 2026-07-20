@@ -102,17 +102,20 @@ def parse_merriam_webster(payload: list[dict[str, Any]]) -> DictEntry | None:
 
 
 def _extract_mw_pronunciation(entry: dict[str, Any]) -> dict[str, str | None]:
-    pronunciations = (entry.get("hwi") or {}).get("prs") or []
+    hwi = entry.get("hwi") or {}
+    pronunciations = [*(hwi.get("prs") or []), *(hwi.get("altprs") or [])]
+    phonetic = None
+    audio_url = None
     for item in pronunciations:
         if not isinstance(item, dict):
             continue
+        if not phonetic:
+            phonetic = item.get("ipa") or item.get("mw")
         sound = item.get("sound") or {}
         audio = sound.get("audio")
-        return {
-            "phonetic": item.get("ipa") or item.get("mw"),
-            "audio_url": _mw_audio_url(audio) if audio else None,
-        }
-    return {"phonetic": None, "audio_url": None}
+        if audio and not audio_url:
+            audio_url = _mw_audio_url(audio)
+    return {"phonetic": phonetic, "audio_url": audio_url}
 
 
 def _mw_audio_url(audio: str) -> str:

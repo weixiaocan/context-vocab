@@ -11,6 +11,14 @@ from app.config import Settings
 
 def collect_word(conn: sqlite3.Connection, settings: Settings, word: str, sentence: str, source_url: str | None) -> int:
     normalized = word.strip().lower()
+    normalized_sentence = sentence.strip()
+    duplicate = conn.execute(
+        "SELECT id FROM sentences WHERE word = ? AND sentence = ? ORDER BY id LIMIT 1",
+        (normalized, normalized_sentence),
+    ).fetchone()
+    if duplicate:
+        return int(duplicate["id"])
+
     existing = conn.execute("SELECT word FROM words WHERE word = ?", (normalized,)).fetchone()
     if existing:
         conn.execute(
@@ -35,7 +43,7 @@ def collect_word(conn: sqlite3.Connection, settings: Settings, word: str, senten
         INSERT INTO sentences (word, sentence, source_url, enriched)
         VALUES (?, ?, ?, 0)
         """,
-        (normalized, sentence.strip(), source_url),
+        (normalized, normalized_sentence, source_url),
     )
     conn.commit()
     return int(cursor.lastrowid)
@@ -119,6 +127,20 @@ def backlog_count(conn: sqlite3.Connection) -> int:
 
 def pending_enrichment_count(conn: sqlite3.Connection) -> int:
     row = conn.execute("SELECT COUNT(*) AS count FROM sentences WHERE enriched = 0").fetchone()
+    return int(row["count"])
+
+
+def cumulative_completed_days(conn: sqlite3.Connection) -> int:
+    row = conn.execute(
+        "SELECT COUNT(DISTINCT date) AS count FROM daily_deck WHERE answered = 1"
+    ).fetchone()
+    return int(row["count"])
+
+
+def cumulative_graduated_count(conn: sqlite3.Connection) -> int:
+    row = conn.execute(
+        "SELECT COUNT(*) AS count FROM words WHERE status = 'graduated'"
+    ).fetchone()
     return int(row["count"])
 
 
