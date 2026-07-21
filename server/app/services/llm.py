@@ -91,10 +91,18 @@ def _validate_discriminative_options(answer: str, distractors: list[str]) -> Non
     synonym_groups = [
         {"严谨", "严谨的", "严密", "严密的", "精确", "精确的", "缜密", "缜密的"},
         {"揭秘", "阐释", "阐明", "讲清楚", "澄清", "去神秘化"},
+        {"微小", "微小的", "微不足道", "微不足道的", "可忽略", "可忽略的", "极少", "极少的"},
+        {"过早", "过早地", "仓促", "仓促地", "轻率", "轻率地", "草率", "草率地"},
+        {"部分", "部分的", "不完整", "不完整的", "局部", "局部的", "片面", "片面的"},
+        {"警告", "警告框", "警告弹窗", "提示", "提示框", "通知", "通知框"},
     ]
-    options = {answer, *non_empty_options(distractors)}
+    options = [answer, *distractors]
+    if len(set(options)) != len(options):
+        raise LLMError("answer and distractors must be unique")
+
+    option_set = set(options)
     for group in synonym_groups:
-        overlap = options & group
+        overlap = option_set & group
         if answer in group and len(overlap) >= 2:
             raise LLMError("distractors contain acceptable near-synonyms of the answer")
 
