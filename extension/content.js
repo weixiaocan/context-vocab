@@ -1,4 +1,5 @@
 (function () {
+  const {normalizeWord, compactText, sentenceFromParts, calculatePopupPosition} = window.VocabCardCore;
   let popup = null;
   let lastSelection = null;
   let lookupRequestId = 0;
@@ -6,7 +7,7 @@
   document.addEventListener("mouseup", event => {
     if (event.target.closest?.(".vocab-card-popup")) return;
     window.setTimeout(handleSelection, 20);
-  });
+  }, true);
 
   document.addEventListener("keydown", event => {
     if (event.key === "Escape") dismissPopup();
@@ -38,12 +39,6 @@
     }
   }
 
-  function normalizeWord(text) {
-    if (!text || /\s/.test(text)) return "";
-    const word = text.replace(/^[^A-Za-z]+|[^A-Za-z]+$/g, "").toLowerCase();
-    return /^[a-z][a-z'-]{0,78}[a-z]$|^[a-z]$/.test(word) ? word : "";
-  }
-
   function findSentence(selection) {
     if (!selection?.rangeCount) return "";
     const range = selection.getRangeAt(0);
@@ -61,26 +56,7 @@
     afterRange.selectNodeContents(container);
     afterRange.setStart(range.endContainer, range.endOffset);
 
-    const before = compactText(beforeRange.toString());
-    const selected = compactText(range.toString());
-    const after = compactText(afterRange.toString());
-    const start = Math.max(
-      before.lastIndexOf("."),
-      before.lastIndexOf("?"),
-      before.lastIndexOf("!"),
-      before.lastIndexOf(";")
-    ) + 1;
-    const endCandidates = [after.indexOf("."), after.indexOf("?"), after.indexOf("!"), after.indexOf(";")]
-      .filter(pos => pos >= 0);
-    const beforePart = before.slice(start).trimStart();
-    const afterEnd = endCandidates.length ? Math.min(...endCandidates) + 1 : Math.min(after.length, 240);
-    const afterPart = after.slice(0, afterEnd).trimEnd();
-    const afterSeparator = /^[,.:;!?]/.test(afterPart) ? "" : " ";
-    return compactText(`${beforePart} ${selected}${afterSeparator}${afterPart}`).slice(0, 2000);
-  }
-
-  function compactText(text) {
-    return String(text || "").replace(/\s+/g, " ").trim();
+    return sentenceFromParts(beforeRange.toString(), range.toString(), afterRange.toString());
   }
 
   function showPopup(rect, word, state) {
@@ -162,22 +138,18 @@
 
   function positionPopup(rect) {
     if (!popup) return;
-    const margin = 12;
-    const gap = 8;
     const popupRect = popup.getBoundingClientRect();
-    const preferredLeft = rect ? rect.left + window.scrollX : window.scrollX + 24;
-    const maxLeft = window.scrollX + window.innerWidth - popupRect.width - margin;
-    const left = Math.max(window.scrollX + margin, Math.min(preferredLeft, maxLeft));
-
-    let top = rect ? rect.bottom + window.scrollY + gap : window.scrollY + 80;
-    const viewportBottom = window.scrollY + window.innerHeight - margin;
-    if (rect && top + popupRect.height > viewportBottom) {
-      top = rect.top + window.scrollY - popupRect.height - gap;
-    }
-    top = Math.max(window.scrollY + margin, top);
-
-    popup.style.left = `${left}px`;
-    popup.style.top = `${top}px`;
+    const position = calculatePopupPosition({
+      selectionRect: rect,
+      popupWidth: popupRect.width,
+      popupHeight: popupRect.height,
+      scrollX: window.scrollX,
+      scrollY: window.scrollY,
+      viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight
+    });
+    popup.style.left = `${position.left}px`;
+    popup.style.top = `${position.top}px`;
   }
 
   function popupHtml(word, body, titleExtra = "") {
@@ -215,8 +187,7 @@
 
   function isInvalidExtensionContext(error) {
     const message = String(error?.message || error || "");
-    return message.includes("EXTENSION_CONTEXT_INVALID")
-      || message.includes("Extension context invalidated");
+    return message.includes("Extension context invalidated");
   }
 
   function isNetworkError(error) {

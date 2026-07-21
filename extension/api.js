@@ -1,14 +1,7 @@
 (function () {
   const DEFAULT_SERVER_URL = "http://127.0.0.1:8001";
 
-  function ensureExtensionContext() {
-    if (!globalThis.chrome?.runtime?.id) {
-      throw new Error("EXTENSION_CONTEXT_INVALID");
-    }
-  }
-
   async function getServerUrl() {
-    ensureExtensionContext();
     const stored = await chrome.storage.sync.get(["serverUrl"]);
     return (stored.serverUrl || DEFAULT_SERVER_URL).replace(/\/$/, "");
   }
@@ -66,7 +59,6 @@
   }
 
   async function loadAudio(audioUrl) {
-    ensureExtensionContext();
     const result = await chrome.runtime.sendMessage({type: "loadAudio", audioUrl});
     if (!result?.ok) throw new Error(result?.error || "Audio request failed");
     const binary = atob(result.base64);

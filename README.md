@@ -40,9 +40,20 @@ python -m uvicorn app.main:app --reload --port 8001
 ```powershell
 cd server
 conda run -n p26-vocab-flashcard python -m pytest
+
+cd ..
+node --test extension/tests
 ```
 
 测试 mock 词典和 LLM，不依赖外部网络。
+
+插件端到端测试页：
+
+```powershell
+python -m http.server 8765 --directory extension
+```
+
+加载插件后打开 `http://127.0.0.1:8765/test-page.html`，可稳定测试重复词原句、嵌套元素、列表样式和弹窗边界。
 
 ## Docker
 

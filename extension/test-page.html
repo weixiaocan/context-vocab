@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vocab Card Extension Test Page</title>
+  <style>
+    body { margin: 0; font: 18px/1.6 Georgia, serif; color: #171717; }
+    main { width: min(760px, calc(100% - 40px)); margin: auto; }
+    section { min-height: 70vh; padding: 32px 0; border-bottom: 1px solid #ddd; }
+    .right-edge { width: 260px; margin-left: auto; text-align: right; }
+    .bottom-edge { display: flex; min-height: 70vh; align-items: end; }
+    table { border-collapse: collapse; }
+    td, th { padding: 8px; border: 1px solid #ccc; }
+    ol { list-style: none; padding: 0; }
+  </style>
+</head>
+<body>
+<main>
+  <section id="repeated-word">
+    <h1>Repeated occurrence</h1>
+    <p>When building applications, start with the simplest solution. This might mean not building agentic systems at all.</p>
+    <p>The result was marginal, but still useful.</p>
+    <p>We tested state-of-the-art tools and don't assume every selection is valid.</p>
+  </section>
+
+  <section id="nested-elements">
+    <h2>Nested elements</h2>
+    <p>A <strong>rigorous</strong> evaluation can expose <a href="#table">subtle</a> failures.</p>
+    <ul><li>List text can contain a <em>tractable</em> problem.</li></ul>
+    <table id="table"><tr><th>Term</th><td>prescriptive</td></tr></table>
+  </section>
+
+  <section id="right-boundary">
+    <h2>Right boundary</h2>
+    <p class="right-edge">Select frameworks near the right edge.</p>
+  </section>
+
+  <section id="bottom-boundary" class="bottom-edge">
+    <p>Select compatibility near the bottom edge.</p>
+  </section>
+</main>
+</body>
+</html>

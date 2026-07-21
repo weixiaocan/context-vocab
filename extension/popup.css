@@ -49,12 +49,16 @@
 }
 
 .vocab-card-popup ol {
+  display: block;
   margin: 10px 0 0;
   padding-left: 20px;
+  list-style: decimal outside;
 }
 
 .vocab-card-popup li {
+  display: list-item;
   margin: 4px 0;
+  list-style: decimal outside;
 }
 
 .vocab-card-actions {

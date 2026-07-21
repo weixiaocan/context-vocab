@@ -17,7 +17,7 @@
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
-      "js": ["api.js", "content.js"],
+      "js": ["core.js", "api.js", "content.js"],
       "css": ["popup.css"],
       "run_at": "document_idle"
     }
