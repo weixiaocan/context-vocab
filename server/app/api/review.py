@@ -23,6 +23,7 @@ def review_page(request: Request, rebuild: bool = False) -> HTMLResponse:
         else deck.get_or_create_daily_deck(request.app.state.db, request.app.state.settings, today)
     )
     backlog = deck.backlog_count(request.app.state.db)
+    total_words = deck.total_word_count(request.app.state.db)
     pending_enrichment = deck.pending_enrichment_count(request.app.state.db)
     cumulative_days = deck.cumulative_completed_days(request.app.state.db)
     cumulative_graduated = deck.cumulative_graduated_count(request.app.state.db)
@@ -33,6 +34,7 @@ def review_page(request: Request, rebuild: bool = False) -> HTMLResponse:
             "cards": cards,
             "cards_json": json.dumps(cards, ensure_ascii=False),
             "backlog": backlog,
+            "total_words": total_words,
             "pending_enrichment": pending_enrichment,
             "cumulative_days": cumulative_days,
             "cumulative_graduated": cumulative_graduated,

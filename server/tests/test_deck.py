@@ -6,6 +6,7 @@ import pytest
 
 from app.config import Settings
 from app.db import init_db
+from app.models import DictEntry
 from app.services import deck
 
 
@@ -43,12 +44,12 @@ def mark_enriched(conn: sqlite3.Connection, sentence_id: int, answer: str = "微
     conn.execute(
         """
         UPDATE sentences
-        SET answer_zh = ?, distractors = ?, trans_zh = ?, enriched = 1
+        SET answer_zh = ?, definition_zh = ?, trans_zh = ?, enriched = 1
         WHERE id = ?
         """,
         (
             answer,
-            json.dumps(["边缘的", "次要的", "有限的"], ensure_ascii=False),
+            "数量或影响非常小的",
             "进一步扩展带来的收益似乎很小。",
             sentence_id,
         ),
@@ -87,6 +88,48 @@ def test_collect_same_sentence_is_idempotent(conn, settings):
     assert word["status"] == "active"
 
 
+def test_collect_saves_dictionary_result_from_extension(conn, settings):
+    deck.collect_word(
+        conn,
+        settings,
+        "Tractable",
+        "The problem is tractable.",
+        "https://a.test",
+        DictEntry(
+            definitions=["easy to deal with"],
+            part_of_speech="adjective",
+            phonetic="/tractable/",
+            audio_url="https://audio.test/tractable.mp3",
+        ),
+    )
+
+    word = conn.execute(
+        "SELECT definitions, part_of_speech, phonetic, audio_url FROM words WHERE word = 'tractable'"
+    ).fetchone()
+    assert json.loads(word["definitions"]) == ["easy to deal with"]
+    assert word["part_of_speech"] == "adjective"
+    assert word["phonetic"] == "/tractable/"
+    assert word["audio_url"] == "https://audio.test/tractable.mp3"
+
+
+def test_recollect_same_sentence_can_fill_legacy_dictionary_fields(conn, settings):
+    first_id = deck.collect_word(conn, settings, "tractable", "The problem is tractable.", None)
+
+    second_id = deck.collect_word(
+        conn,
+        settings,
+        "tractable",
+        "The problem is tractable.",
+        None,
+        DictEntry(["easy to deal with"], "adjective", "/tractable/", None),
+    )
+
+    word = conn.execute("SELECT definitions, part_of_speech FROM words WHERE word = 'tractable'").fetchone()
+    assert second_id == first_id
+    assert json.loads(word["definitions"]) == ["easy to deal with"]
+    assert word["part_of_speech"] == "adjective"
+
+
 def test_daily_deck_is_stable_and_uses_enriched_pending_words(conn, settings):
     for raw_word in ["marginal", "tractable", "ablation"]:
         sentence_id = deck.collect_word(conn, settings, raw_word, f"{raw_word} sentence.", None)
@@ -100,7 +143,7 @@ def test_daily_deck_is_stable_and_uses_enriched_pending_words(conn, settings):
     assert all(card["is_new"] for card in first)
 
 
-def test_answer_correct_decrements_once_and_graduates(conn, settings):
+def test_repeated_good_answer_records_attempt_without_expanding_twice(conn, settings):
     sentence_id = deck.collect_word(conn, settings, "marginal", "The gains appear marginal.", None)
     mark_enriched(conn, sentence_id)
     conn.execute("UPDATE words SET status = 'active', remaining = 1 WHERE word = 'marginal'")
@@ -112,16 +155,53 @@ def test_answer_correct_decrements_once_and_graduates(conn, settings):
 
     result = deck.answer_card(conn, date(2026, 7, 13), "marginal", True)
     second_result = deck.answer_card(conn, date(2026, 7, 13), "marginal", True)
-    word = conn.execute("SELECT remaining, status FROM words WHERE word = 'marginal'").fetchone()
+    word = conn.execute(
+        "SELECT review_interval, due_date, status FROM words WHERE word = 'marginal'"
+    ).fetchone()
 
-    assert result["remaining"] == 0
-    assert result["status"] == "graduated"
+    assert result["review_interval"] == 1
+    assert result["due_date"] == "2026-07-14"
+    assert result["status"] == "active"
+    attempts = conn.execute(
+        "SELECT COUNT(*) AS count FROM reviews WHERE word = 'marginal'"
+    ).fetchone()["count"]
     assert second_result["already_answered"] is True
-    assert word["remaining"] == 0
-    assert word["status"] == "graduated"
+    assert second_result["correct"] is True
+    assert attempts == 2
+    assert word["review_interval"] == 1
+    assert word["due_date"] == "2026-07-14"
+    assert word["status"] == "active"
 
 
-def test_answer_wrong_does_not_decrement(conn, settings):
+def test_again_then_good_keeps_tomorrow_schedule_and_worst_daily_result(conn, settings):
+    sentence_id = deck.collect_word(conn, settings, "marginal", "The gains appear marginal.", None)
+    mark_enriched(conn, sentence_id)
+    conn.execute("UPDATE words SET status = 'active', review_interval = 3 WHERE word = 'marginal'")
+    conn.execute(
+        "INSERT INTO daily_deck (date, word, sentence_id, is_new) VALUES (?, ?, ?, 0)",
+        ("2026-07-13", "marginal", sentence_id),
+    )
+    conn.commit()
+
+    first = deck.answer_card(conn, date(2026, 7, 13), "marginal", False)
+    second = deck.answer_card(conn, date(2026, 7, 13), "marginal", True)
+    daily = conn.execute(
+        "SELECT answered, correct FROM daily_deck WHERE date = '2026-07-13' AND word = 'marginal'"
+    ).fetchone()
+    attempts = conn.execute(
+        "SELECT correct FROM reviews WHERE word = 'marginal' ORDER BY id"
+    ).fetchall()
+
+    assert first["correct"] is False
+    assert second["correct"] is False
+    assert second["review_interval"] == 1
+    assert second["due_date"] == "2026-07-14"
+    assert daily["answered"] == 1
+    assert daily["correct"] == 0
+    assert [row["correct"] for row in attempts] == [0, 1]
+
+
+def test_again_answer_schedules_tomorrow(conn, settings):
     sentence_id = deck.collect_word(conn, settings, "marginal", "The gains appear marginal.", None)
     mark_enriched(conn, sentence_id)
     conn.execute("UPDATE words SET status = 'active', remaining = 3 WHERE word = 'marginal'")
@@ -132,10 +212,31 @@ def test_answer_wrong_does_not_decrement(conn, settings):
     conn.commit()
 
     deck.answer_card(conn, date(2026, 7, 13), "marginal", False)
-    word = conn.execute("SELECT remaining, status FROM words WHERE word = 'marginal'").fetchone()
+    word = conn.execute(
+        "SELECT review_interval, due_date, status FROM words WHERE word = 'marginal'"
+    ).fetchone()
 
-    assert word["remaining"] == 3
+    assert word["review_interval"] == 1
+    assert word["due_date"] == "2026-07-14"
     assert word["status"] == "active"
+
+
+def test_good_answers_expand_review_interval(conn, settings):
+    sentence_id = deck.collect_word(conn, settings, "marginal", "The gains appear marginal.", None)
+    mark_enriched(conn, sentence_id)
+    conn.execute(
+        "UPDATE words SET status = 'active', review_interval = 3, due_date = '2026-07-13' WHERE word = 'marginal'"
+    )
+    conn.execute(
+        "INSERT INTO daily_deck (date, word, sentence_id, is_new) VALUES (?, ?, ?, 0)",
+        ("2026-07-13", "marginal", sentence_id),
+    )
+    conn.commit()
+
+    result = deck.answer_card(conn, date(2026, 7, 13), "marginal", True)
+
+    assert result["review_interval"] == 7
+    assert result["due_date"] == "2026-07-20"
 
 
 def test_cumulative_counts_only_answered_dates_and_graduated_words(conn, settings):

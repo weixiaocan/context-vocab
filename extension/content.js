@@ -32,6 +32,7 @@
     try {
       const result = await window.VocabCardApi.lookupWord(word, lastSelection.sentence);
       if (requestId !== lookupRequestId) return;
+      lastSelection.dictionaryEntry = result;
       showPopup(rect, word, {entry: result});
     } catch (error) {
       if (requestId !== lookupRequestId) return;

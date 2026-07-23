@@ -3,488 +3,64 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>生词卡 · {{ today }}</title>
+  <title>单词复习 · {{ today }}</title>
   <style>
-    :root {
-      color-scheme: light;
-      --accent: #E85D26;
-      --text: #171717;
-      --muted: #737373;
-      --line: #D8D8D5;
-      --surface: #F4F3EE;
-      --correct-border: #1D9E75;
-      --correct-bg: #E1F5EE;
-      --correct-text: #085041;
-      --wrong-border: #E24B4A;
-      --wrong-bg: #FCEBEB;
-      --wrong-text: #791F1F;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: #F5F5F1;
-      color: var(--text);
-      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-    }
-    button { font: inherit; }
-    main {
-      width: min(560px, 100%);
-      margin: 0 auto;
-      padding: 12px 12px 26px;
-    }
-    .card {
-      position: relative;
-      overflow: hidden;
-      padding: 38px 20px 24px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: #fff;
-    }
-    .progress {
-      position: absolute;
-      inset: 0 0 auto;
-      display: grid;
-      grid-template-columns: repeat(var(--segments), 1fr);
-      gap: 0;
-      height: 3px;
-      overflow: hidden;
-    }
-    .progress-segment { background: #E6E6E3; }
-    .progress-segment.done { background: var(--accent); }
-    .word-row {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .word {
-      overflow-wrap: anywhere;
-      font-size: 38px;
-      font-weight: 400;
-      line-height: 1.15;
-    }
-    .audio-button {
-      display: inline-grid;
-      place-items: center;
-      width: 44px;
-      height: 44px;
-      padding: 0;
-      border: 0;
-      background: transparent;
-      color: var(--accent);
-      cursor: pointer;
-    }
-    .audio-button svg { width: 18px; height: 18px; }
-    .phonetic {
-      min-height: 18px;
-      margin-top: 7px;
-      color: var(--muted);
-      font: 14px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
-    }
-    .sentence {
-      margin-top: 22px;
-      padding: 14px 17px;
-      border-radius: 8px;
-      background: var(--surface);
-      color: var(--text);
-      font-size: 18px;
-      line-height: 1.55;
-    }
-    mark {
-      border-bottom: 2px solid var(--accent);
-      background: transparent;
-      color: var(--accent);
-      font-weight: 500;
-    }
-    .options {
-      display: grid;
-      gap: 10px;
-      margin-top: 26px;
-    }
-    .option {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-      min-height: 58px;
-      padding: 15px 18px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fff;
-      color: var(--text);
-      text-align: left;
-      font-size: 18px;
-      line-height: 1.45;
-      cursor: pointer;
-      transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 100ms ease;
-    }
-    .option:not(:disabled):hover,
-    .option:not(:disabled):focus-visible {
-      border-color: #BABAB6;
-      background: #FAFAF8;
-      outline: none;
-    }
-    .option:not(:disabled):active { transform: translateY(1px); }
-    .option:disabled { cursor: default; opacity: 1; }
-    .option-text { min-width: 0; overflow-wrap: anywhere; }
-    .option.muted { color: #999; }
-    .option.correct {
-      border-color: var(--correct-border);
-      background: var(--correct-bg);
-      color: var(--correct-text);
-    }
-    .option.correct::after { flex: 0 0 auto; margin-left: 12px; font-size: 21px; content: "✓"; }
-    .option.wrong {
-      border-color: var(--wrong-border);
-      background: var(--wrong-bg);
-      color: var(--wrong-text);
-    }
-    .option.wrong::after { flex: 0 0 auto; margin-left: 12px; font-size: 20px; content: "×"; }
-    .answer {
-      display: grid;
-      gap: 12px;
-      margin-top: 24px;
-      padding: 24px 0 0;
-      border-top: 1px solid var(--line);
-      animation: reveal 220ms ease-out;
-    }
-    @keyframes reveal {
-      from { opacity: 0; transform: translateY(5px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .answer-label {
-      display: none;
-    }
-    .pos-tag {
-      justify-self: start;
-      padding: 3px 7px;
-      border-radius: 4px;
-      background: #FAECE7;
-      color: #993C1D;
-      font-size: 12px;
-      line-height: 1.3;
-    }
-    .defs {
-      display: grid;
-      gap: 5px;
-      margin: 0;
-      padding-left: 0;
-      color: var(--text);
-      font-size: 17px;
-      line-height: 1.6;
-      list-style: none;
-    }
-    details { margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--line); color: var(--muted); font-size: 16px; }
-    summary { min-height: 48px; padding: 14px 2px; cursor: pointer; }
-    details p { margin: 0; line-height: 1.6; }
-    .nav {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      margin-top: 22px;
-    }
-    .nav-button {
-      min-width: 104px;
-      min-height: 46px;
-      padding: 10px 16px;
-      border: 1px solid #BDBDB8;
-      border-radius: 8px;
-      background: #fff;
-      color: var(--text);
-      font-size: 16px;
-      cursor: pointer;
-    }
-    .nav-button:disabled { opacity: 0.35; cursor: default; }
-    .nav-button.primary { margin-left: auto; border-color: var(--accent); color: var(--accent); }
-    footer {
-      margin-top: 20px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.5;
-      text-align: center;
-    }
-    .empty { padding: 36px 18px; color: var(--muted); text-align: center; }
-    .complete {
-      position: relative;
-      padding: 38px 20px 28px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: #fff;
-      text-align: center;
-    }
-    .complete h1 {
-      margin: 0;
-      color: var(--accent);
-      font-size: 38px;
-      font-weight: 400;
-      line-height: 1.2;
-    }
-    .complete-date { margin-top: 8px; color: var(--muted); font-size: 14px; }
-    .today-stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-top: 40px;
-    }
-    .stat {
-      min-width: 0;
-      padding: 20px 6px;
-      border-radius: 8px;
-      background: var(--surface);
-      text-align: center;
-    }
-    .stat strong {
-      display: block;
-      font-size: 32px;
-      font-weight: 400;
-      line-height: 1.05;
-    }
-    .stat:nth-child(2) strong { color: var(--correct-text); }
-    .stat:nth-child(3) strong { color: var(--accent); }
-    .stat span { display: block; margin-top: 6px; color: var(--muted); font-size: 14px; }
-    .graduates {
-      margin-top: 40px;
-      padding: 0;
-      color: var(--text);
-      font-size: 16px;
-      line-height: 1.6;
-    }
-    .graduates small { display: block; margin-top: 6px; color: var(--muted); font-size: 14px; }
-    .cumulative { margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; line-height: 1.6; }
-    .again-button { margin-top: 28px; }
-    #confetti-canvas { position: fixed !important; inset: 0; pointer-events: none !important; z-index: 10 !important; }
-    @media (min-width: 560px) {
-      main { padding: 34px 18px 28px; }
-      .card { padding: 46px 32px 32px; }
-      .complete { padding: 48px 34px 34px; }
-    }
-    @media (max-width: 380px) {
-      .word { font-size: 34px; }
-      .today-stats { gap: 8px; }
-      .stat strong { font-size: 34px; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .answer { animation: none; }
-    }
+    :root{color-scheme:light;--bg:#f3f1ec;--surface:#fffefb;--ink:#252723;--muted:#777a72;--line:#e3e1da;--accent:#6e8062;--accent-soft:#e8eee3;--again:#a9655a;--shadow:0 24px 70px rgba(47,50,43,.11),0 3px 12px rgba(47,50,43,.06)}
+    *{box-sizing:border-box}[hidden]{display:none!important}body{min-height:100vh;margin:0;background:radial-gradient(circle at 15% 12%,rgba(255,255,255,.8),transparent 28%),radial-gradient(circle at 86% 86%,rgba(214,222,207,.55),transparent 30%),var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI","PingFang SC",sans-serif}button{color:inherit;font:inherit}.shell{width:min(760px,100%);margin:0 auto;padding:38px 20px 30px}.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}.eyebrow{color:var(--muted);font-size:13px;font-weight:650;letter-spacing:.08em;text-transform:uppercase}.progress{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:13px}.progress-line{width:112px;height:4px;overflow:hidden;border-radius:999px;background:#dddcd6}.progress-fill{height:100%;border-radius:inherit;background:var(--accent);transition:width .2s ease}
+    .scene{perspective:1600px}.card{position:relative;min-height:540px;cursor:pointer;transform-style:preserve-3d;transition:transform .52s cubic-bezier(.2,.72,.25,1)}.card.is-flipped{transform:rotateY(180deg)}.face{position:absolute;inset:0;display:flex;flex-direction:column;min-height:540px;padding:34px 42px 28px;border:1px solid rgba(116,119,108,.16);border-radius:28px;background:rgba(255,254,251,.96);box-shadow:var(--shadow);backface-visibility:hidden;-webkit-backface-visibility:hidden}.back{transform:rotateY(180deg)}.face-top{display:flex;align-items:center;justify-content:space-between}.tag{padding:7px 11px;border-radius:999px;background:var(--accent-soft);color:#58664f;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}.audio{display:grid;place-items:center;width:48px;height:48px;border:1px solid var(--line);border-radius:50%;background:#fff;cursor:pointer;transition:background .16s ease,transform .16s ease}.audio:hover{background:var(--accent-soft);transform:translateY(-1px)}.audio.is-playing{background:var(--accent);color:#fff}.audio.is-error{background:#f5e7e4;color:var(--again)}.audio svg{width:21px;height:21px}
+    .front-content{display:grid;place-items:center;flex:1;padding:38px 24px 24px;text-align:center}.word{margin:0;font-family:Georgia,"Times New Roman",serif;font-size:clamp(52px,10vw,76px);font-weight:500;letter-spacing:-.045em;overflow-wrap:anywhere}.phonetic,.back-phonetic{display:flex;align-items:center;gap:9px;color:var(--muted)}.phonetic{justify-content:center;min-height:25px;margin-top:13px;font-size:17px}.part-of-speech{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:.82em;font-weight:650;letter-spacing:.04em;text-transform:lowercase}.part-of-speech::before{margin-right:9px;color:#b1b3ac;content:"·"}.sentence{max-width:570px;margin:42px auto 0;color:#444740;font-family:Georgia,"Times New Roman",serif;font-size:clamp(20px,3.5vw,25px);line-height:1.65}.target-word{margin:0 2px;padding:1px 7px 3px;border-radius:7px;background:var(--accent-soft);color:#46523f;font-weight:600;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+    .back-content{flex:1;padding-top:28px}.answer-line{display:flex;align-items:center;gap:18px;flex-wrap:wrap}.answer{font-family:Georgia,"Times New Roman",serif;font-size:44px;font-weight:500;line-height:1.08;letter-spacing:-.035em;overflow-wrap:anywhere}.meaning{color:var(--accent);font-size:20px;font-weight:680;line-height:1.2}.back-phonetic{min-height:22px;margin-top:7px;font-size:16px}.divider{height:1px;margin:22px 0 25px;background:var(--line)}.label{margin-bottom:8px;color:#999b94;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.label.secondary{margin-top:18px}.definition{margin:0;color:#3f423c;font-size:16px;line-height:1.6}.english-definitions{display:grid;gap:5px;margin:0;padding-left:21px;color:#3f423c;font-family:Georgia,"Times New Roman",serif;font-size:16px;line-height:1.55}.example{margin:20px 0 0;padding:16px 18px;border-left:3px solid #aaba9e;border-radius:0 12px 12px 0;background:#f5f7f2;color:#4d5049;font-family:Georgia,"Times New Roman",serif;font-size:17px;line-height:1.55}.translation{margin:7px 0 0;color:var(--muted);font-family:inherit;font-size:14px}
+    .card-footer{display:grid;grid-template-columns:48px 1fr 48px;align-items:center;gap:12px;margin:4px -4px -4px}.card-nav{display:grid;place-items:center;width:48px;height:48px;border:0;border-radius:50%;background:transparent;color:#62665e;font-size:23px;cursor:pointer;transition:background .16s ease,color .16s ease}.card-nav:hover:not(:disabled){background:var(--accent-soft);color:var(--accent)}.card-nav:disabled{color:#c6c7c2;cursor:default}.flip-hint{display:flex;min-height:48px;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:13px}.flip-hint::after{content:"→";transition:transform .16s ease}.card:hover .flip-hint::after{transform:translateX(3px)}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:24px}.action{min-height:52px;border:1px solid;border-radius:14px;background:#fff;font-weight:700;cursor:pointer}.action.again{border-color:#d8b8b2;color:#98594f}.action.good{border-color:#afc0a7;background:var(--accent);color:#fff}.action:disabled{border-color:var(--line);background:#f5f4f0;color:#94968f;cursor:default}.back .card-footer{margin:16px -4px -4px;padding-top:16px;border-top:1px solid var(--line)}.empty{padding:58px 24px;border:1px solid var(--line);border-radius:28px;background:var(--surface);box-shadow:var(--shadow);text-align:center}.empty h1{margin:0 0 10px;font-family:Georgia,"Times New Roman",serif;font-weight:500}.empty p{margin:0;color:var(--muted)}
+    .celebration{--night:#17211d;--glow:#f5d995;--spark:#f8e6aa;position:relative;display:grid;min-height:620px;overflow:hidden;place-items:center;padding:56px 30px;border:1px solid rgba(255,255,255,.22);border-radius:30px;background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.12),transparent 28%),linear-gradient(155deg,var(--night),#0d1412);box-shadow:var(--shadow);color:#fff;text-align:center}.celebration.theme-rose{--night:#5d3845;--glow:#ffd4c7;--spark:#ffe4c7;background:radial-gradient(circle at 25% 22%,rgba(255,218,205,.28),transparent 30%),linear-gradient(150deg,#6f4654,#312b42)}.celebration.theme-aurora{--night:#18354a;--glow:#bceadd;--spark:#c9f4e4;background:radial-gradient(ellipse at 70% 12%,rgba(133,229,195,.3),transparent 34%),radial-gradient(ellipse at 18% 80%,rgba(158,132,219,.28),transparent 38%),linear-gradient(155deg,#173848,#181c38)}.celebration::after{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,.65) 0 1px,transparent 1.5px);background-size:46px 46px;content:"";opacity:.28}.firework{position:absolute;z-index:1;width:5px;height:5px;border-radius:50%;color:var(--spark);box-shadow:0 -70px,49px -49px,70px 0,49px 49px,0 70px,-49px 49px,-70px 0,-49px -49px,0 -38px 0 1px,27px -27px 0 1px,38px 0 0 1px,27px 27px 0 1px,0 38px 0 1px,-27px 27px 0 1px,-38px 0 0 1px,-27px -27px 0 1px;animation:firework 3.6s ease-out infinite;opacity:0}.firework.one{top:28%;left:24%}.firework.two{top:22%;right:22%;animation-delay:1.15s}.firework.three{top:48%;right:14%;animation-delay:2.25s}.celebration-content{position:relative;z-index:2;max-width:500px}.celebration-kicker{color:var(--glow);font-size:12px;font-weight:750;letter-spacing:.18em;text-transform:uppercase}.celebration-icon{margin:22px 0 10px;color:var(--glow);font-family:Georgia,"Times New Roman",serif;font-size:58px;line-height:1}.celebration h1{margin:0;font-family:Georgia,"Times New Roman",serif;font-size:clamp(38px,8vw,58px);font-weight:500;letter-spacing:-.03em}.celebration-message{margin:18px auto 0;color:rgba(255,255,255,.78);font-size:16px;line-height:1.7}.celebration-total{margin-top:26px;color:var(--glow);font-size:14px}.celebration-back{min-width:190px;min-height:50px;margin-top:34px;border:1px solid rgba(255,255,255,.34);border-radius:999px;background:rgba(255,255,255,.1);color:#fff;font-weight:700;cursor:pointer;backdrop-filter:blur(8px)}.celebration-back:hover{background:rgba(255,255,255,.18)}@keyframes firework{0%,18%{opacity:0;transform:scale(.08)}25%{opacity:1}52%{opacity:0;transform:scale(1)}100%{opacity:0;transform:scale(1)}}
+    @media(max-width:560px){.shell{padding:20px 14px}.header{margin-bottom:14px}.progress-line{width:82px}.card,.face{min-height:530px}.face{padding:22px 18px 18px;border-radius:22px}.front-content{padding:30px 4px 20px}.sentence{margin-top:34px}.back-content{padding-top:20px}.answer-line{gap:13px}.answer{font-size:38px}.meaning{font-size:18px}.back-phonetic{font-size:15px}.divider{margin:18px 0 20px}.example{margin-top:15px}.card-footer{grid-template-columns:52px 1fr 52px;gap:8px}.back .card-footer{margin-top:18px;padding-top:16px}.actions{gap:12px;margin-top:22px}.action{min-height:54px}.card-nav{width:52px;height:52px}.audio{width:48px;height:48px}.celebration{min-height:620px;padding:44px 22px;border-radius:24px}.celebration-icon{font-size:50px}}
+    @media(prefers-reduced-motion:reduce){.card{transition-duration:1ms}.firework{animation:none;opacity:.42;transform:scale(.7)}}
+    .celebration-message{margin-top:24px;color:rgba(255,255,255,.88);font-family:Georgia,"Songti SC","STSong",serif;font-size:clamp(18px,3.6vw,22px);line-height:1.75}.verse-source{display:block;margin-top:9px;color:rgba(255,255,255,.55);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI","PingFang SC",sans-serif;font-size:12px;letter-spacing:.05em}
   </style>
 </head>
 <body>
-<canvas id="confetti-canvas" aria-hidden="true"></canvas>
-<main>
+<main class="shell">
+  <header id="header" class="header" hidden><div class="eyebrow">Today’s review</div><div class="progress"><div class="progress-line"><div id="progressFill" class="progress-fill"></div></div><span id="count"></span></div></header>
   <section id="app"></section>
-  <footer>待复习 {{ backlog }} · Dictionary data may include Wiktionary-derived CC BY-SA content.</footer>
 </main>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.9.3/confetti.browser.min.js"></script>
 <script>
-const cards = {{ cards_json | safe }};
-const today = {{ today | tojson }};
-const cumulativeDays = Number({{ cumulative_days }});
-const cumulativeGraduated = Number({{ cumulative_graduated }});
-const previewMode = new URLSearchParams(window.location.search).get("preview") === "1";
-const confettiEffect = typeof confetti === "function"
-  ? confetti.create(document.getElementById("confetti-canvas"), {resize: true, useWorker: true})
-  : null;
-let index = Math.max(0, cards.findIndex(card => !card.answered));
-let answered = cards[index]?.answered || false;
-let selected = null;
-let advancing = false;
-const selections = new Map();
-
-if (previewMode) {
-  cards.forEach(card => {
-    card.answered = false;
-    card.correct = null;
-  });
-  index = 0;
-  answered = false;
-}
-
-const app = document.getElementById("app");
-
-function escapeHtml(text) {
-  return String(text ?? "").replace(/[&<>"']/g, ch => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
-  }[ch]));
-}
-
-function highlight(sentence, word) {
-  const englishSentence = String(sentence ?? "").replace(/\s*[\u3400-\u9fff][\s\S]*$/, "").trim();
-  const escaped = escapeHtml(englishSentence);
-  const safeWord = String(word).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return escaped.replace(new RegExp(`\\b(${safeWord})\\b`, "ig"), "<mark>$1</mark>");
-}
-
-function progressHtml(completed) {
-  return `<div class="progress" style="--segments:${cards.length}" aria-label="已完成 ${completed} / ${cards.length}">
-    ${cards.map((_, i) => `<span class="progress-segment ${i < completed ? "done" : ""}"></span>`).join("")}
-  </div>`;
-}
-
-function speakerIcon() {
-  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18 6a8.5 8.5 0 0 1 0 12"/></svg>`;
-}
-
-function renderCard() {
-  const card = cards[index];
-  const options = card.options.map((option, optionIndex) => {
-    let state = "";
-    if (answered) {
-      if (option === card.answer_zh) state = "correct";
-      else if (option === selected) state = "wrong";
-      else state = "muted";
-    }
-    return `<button class="option ${state}" data-option-index="${optionIndex}" ${answered ? "disabled" : ""}><span class="option-text">${escapeHtml(option)}</span></button>`;
-  }).join("");
-  const answer = answered ? `<div class="answer">
-    <div class="answer-label">${escapeHtml(card.answer_zh)}</div>
-    ${card.part_of_speech ? `<span class="pos-tag">${escapeHtml(card.part_of_speech)}</span>` : ""}
-    <ol class="defs">${(card.definitions || []).map(def => `<li>${escapeHtml(def)}</li>`).join("") || "<li>暂无词典释义</li>"}</ol>
-    <details><summary>原句中文</summary><p>${escapeHtml(card.trans_zh)}</p></details>
-  </div>` : "";
-  const navigation = `<div class="nav">
-    ${index > 0 ? `<button class="nav-button" data-previous>上一张</button>` : ""}
-    <button class="nav-button primary" data-next ${answered ? "" : "disabled"}>${index === cards.length - 1 ? "完成" : "下一张"}</button>
-  </div>`;
-
-  app.innerHTML = `<article class="card">
-    ${progressHtml(index + (answered ? 1 : 0))}
-    <div class="word-row">
-      <div class="word">${escapeHtml(card.word)}</div>
-      <button class="audio-button" data-play-audio aria-label="重播发音" title="${card.audio_url ? "播放词典发音" : "使用系统语音播放"}">${speakerIcon()}</button>
-    </div>
-    <div class="phonetic">${escapeHtml(card.phonetic || "")}</div>
-    <div class="sentence">${highlight(card.sentence, card.word)}</div>
-    <div class="options">${options}</div>
-    ${answer}
-    ${navigation}
-  </article>`;
-
-  document.querySelectorAll("[data-option-index]").forEach(button => {
-    button.addEventListener("click", () => chooseOption(card.options[Number(button.dataset.optionIndex)]));
-  });
-  document.querySelector("[data-play-audio]")?.addEventListener("click", () => playAudio(card.audio_url, card.word));
-  document.querySelector("[data-previous]")?.addEventListener("click", goPrevious);
-  document.querySelector("[data-next]")?.addEventListener("click", goNext);
-}
-
-function playAudio(url, word) {
-  if (!url) {
-    speakWord(word);
-    return;
-  }
-  new Audio(url).play().catch(() => speakWord(word));
-}
-
-function speakWord(word) {
-  if (!word || !("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) return;
-  const utterance = new SpeechSynthesisUtterance(word);
-  utterance.lang = "en-US";
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utterance);
-}
-
-async function chooseOption(option) {
-  if (answered || advancing) return;
-  advancing = true;
-  const card = cards[index];
-  const correct = option === card.answer_zh;
-  try {
-    let result = {};
-    if (!previewMode) {
-      const response = await fetch("/review/answer", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({word: card.word, correct})
-      });
-      if (!response.ok) throw new Error("answer request failed");
-      result = await response.json();
-    }
-    card.answered = true;
-    card.correct = correct;
-    card.status = result.status || card.status;
-    selected = option;
-    selections.set(card.word, option);
-    answered = true;
-    advancing = false;
-    renderCard();
-    playAudio(card.audio_url, card.word);
-  } catch (error) {
-    advancing = false;
-  }
-}
-
-function goNext() {
-  if (!answered) return;
-  if (index < cards.length - 1) {
-    index += 1;
-    selected = selections.get(cards[index].word) || (cards[index].correct ? cards[index].answer_zh : null);
-    answered = cards[index].answered;
-    advancing = false;
-    renderCard();
-    window.scrollTo({top: 0, behavior: "smooth"});
-    return;
-  }
-  if (previewMode) {
-    renderComplete();
-  } else {
-    window.location.reload();
-  }
-}
-
-function goPrevious() {
-  if (index === 0) return;
-  index -= 1;
-  selected = selections.get(cards[index].word) || (cards[index].correct ? cards[index].answer_zh : null);
-  answered = cards[index].answered;
-  advancing = false;
-  renderCard();
-  window.scrollTo({top: 0, behavior: "smooth"});
-}
-
-function renderComplete() {
-  const reviewed = cards.filter(card => card.answered);
-  const correct = reviewed.filter(card => card.correct).length;
-  const graduates = reviewed.filter(card => card.status === "graduated").map(card => card.word);
-  const graduateCopy = graduates.length ? `<div class="graduates">
-    ${escapeHtml(formatWordList(graduates))}毕业了
-    <small>下次在文章里见到它们，你会认得</small>
-  </div>` : "";
-  app.innerHTML = `<section class="complete">
-    <h1>今天完成了</h1>
-    <div class="complete-date">${escapeHtml(today)}</div>
-    <div class="today-stats">
-      <div class="stat"><strong>${reviewed.length}</strong><span>刷了</span></div>
-      <div class="stat"><strong>${correct}</strong><span>答对</span></div>
-      <div class="stat"><strong>${graduates.length}</strong><span>毕业</span></div>
-    </div>
-    ${graduateCopy}
-    <div class="cumulative">累计完成 ${cumulativeDays} 天 · 累计毕业 ${cumulativeGraduated} 个词</div>
-    <button class="nav-button again-button" onclick="window.location.href='/review?preview=1'">再来一次</button>
-  </section>`;
-  fireConfetti();
-}
-
-function formatWordList(words) {
-  if (words.length < 2) return words[0] || "";
-  return `${words.slice(0, -1).join("、")} 和 ${words.at(-1)} `;
-}
-
-function fireConfetti() {
-  if (!confettiEffect || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const colors = ["#E85D26", "#EF9F27", "#1D9E75", "#7F77DD", "#D4537E"];
-  const shoot = origin => confettiEffect({particleCount: 55, spread: 60, startVelocity: 45, origin, colors, disableForReducedMotion: true});
-  shoot({x: 0, y: 0.72});
-  shoot({x: 1, y: 0.72});
-  window.setTimeout(() => shoot({x: 0.5, y: 0.35}), 260);
-}
-
-if (!cards.length) {
-  const pending = Number("{{ pending_enrichment }}");
-  app.innerHTML = `<div class="empty">${pending > 0 ? `有 ${pending} 个词正在补全，稍后刷新` : "今天还没有可复习的卡片"}</div>`;
-} else if (cards.every(card => card.answered)) {
-  renderComplete();
-} else {
-  renderCard();
-}
+const cards={{ cards_json | safe }};
+const query=new URLSearchParams(location.search);
+const previewMode=query.get("preview")==="1";
+const celebrationPreview=previewMode&&query.get("celebration")==="1";
+if(previewMode)cards.forEach(card=>{card.answered=false;card.correct=null});
+if(celebrationPreview)cards.forEach(card=>{card.answered=true;card.correct=true});
+let index=Math.max(0,cards.findIndex(card=>!card.answered));
+let showingBack=cards[index]?.answered||false;
+let showingCelebration=celebrationPreview||(cards.length>0&&cards.every(card=>card.answered));
+let submitting=false;
+const app=document.getElementById("app"),header=document.getElementById("header"),count=document.getElementById("count"),progressFill=document.getElementById("progressFill");
+const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+function markedSentence(sentence,word){const safe=esc(sentence),needle=String(word).replace(/[.*+?^${}()|[\]\\]/g,"\\$&");return safe.replace(new RegExp(`\\b(${needle})\\b`,"ig"),'<span class="target-word">$1</span>')}
+function displaySentence(card){const sentence=String(card.sentence||'').trim(),translation=String(card.trans_zh||'').trim();if(translation&&sentence.endsWith(translation)){const cleaned=sentence.slice(0,-translation.length).trim().replace(/[·|｜—–-]+$/,'').trim();if(cleaned)return cleaned}return sentence}
+function speaker(){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 5 6.5 9H3v6h3.5l4.5 4V5Z"/><path d="M15 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>'}
+const allAnswered=()=>cards.length>0&&cards.every(card=>card.answered);
+function nav(label){const nextDisabled=index===cards.length-1&&!allAnswered();return `<div class="card-footer"><button class="card-nav" data-prev aria-label="上一张" ${index===0?'disabled':''}>←</button><div class="flip-hint">${label}</div><button class="card-nav" data-next aria-label="下一张" ${nextDisabled?'disabled':''}>→</button></div>`}
+function formatPhonetic(value){const phonetic=String(value||'').trim();if(!phonetic)return'';if((phonetic.startsWith('/')&&phonetic.endsWith('/'))||(phonetic.startsWith('[')&&phonetic.endsWith(']')))return phonetic;return `/${phonetic}/`}
+function wordMeta(card,className){const phonetic=esc(formatPhonetic(card.phonetic)),part=esc(card.part_of_speech||'');return `<div class="${className}"><span>${phonetic}</span>${part?`<span class="part-of-speech">${part}</span>`:''}</div>`}
+function front(card){const sentence=displaySentence(card);return `<section class="face front"><div class="face-top"><span class="tag">${card.is_new?'New word':'Review'}</span><button class="audio" data-audio aria-label="播放 ${esc(card.word)} 的发音">${speaker()}</button></div><div class="front-content"><div><h1 class="word">${esc(card.word)}</h1>${wordMeta(card,'phonetic')}<p class="sentence">${markedSentence(sentence,card.word)}</p></div></div>${nav('查看释义')}</section>`}
+function back(card){const sentence=displaySentence(card),definitions=(card.definitions||[]).filter(Boolean),english=definitions.length?definitions.map(item=>`<li>${esc(item)}</li>`).join(''):'<li>暂无英文释义</li>';const controls=`<div class="actions"><button class="action again" data-answer="false">再想想</button><button class="action good" data-answer="true">记住了</button></div>`;return `<section class="face back"><div class="face-top"><span class="tag">Answer</span><button class="audio" data-audio aria-label="播放 ${esc(card.word)} 的发音">${speaker()}</button></div><div class="back-content"><div class="answer-line"><div class="answer">${esc(card.word)}</div><div class="meaning">${esc(card.answer_zh||'暂无中文释义')}</div></div>${wordMeta(card,'back-phonetic')}<div class="divider"></div><div class="label">English definition</div><ol class="english-definitions">${english}</ol><div class="label secondary">中文解释</div><p class="definition">${esc(card.definition_zh||'暂无中文解释')}</p><blockquote class="example">${markedSentence(sentence,card.word)}<p class="translation">${esc(card.trans_zh||'暂无翻译')}</p></blockquote></div>${controls}${nav('返回正面')}</section>`}
+const celebrationThemes=[{className:'theme-midnight',kicker:'A quiet victory',icon:'✦',title:'今夜，词语发光了'},{className:'theme-rose',kicker:'A little celebration',icon:'❀',title:'把今天轻轻收藏'},{className:'theme-aurora',kicker:'Words remembered',icon:'◇',title:'今天的星图完成了'}];
+const celebrationVerses=[{line:'行到水穷处，坐看云起时。',source:'王维《终南别业》'},{line:'醉后不知天在水，满船清梦压星河。',source:'唐珙《题龙阳县青草湖》'},{line:'海上生明月，天涯共此时。',source:'张九龄《望月怀远》'},{line:'山重水复疑无路，柳暗花明又一村。',source:'陆游《游山西村》'},{line:'长风破浪会有时，直挂云帆济沧海。',source:'李白《行路难·其一》'},{line:'人间有味是清欢。',source:'苏轼《浣溪沙》'},{line:'采菊东篱下，悠然见南山。',source:'陶渊明《饮酒·其五》'},{line:'疏影横斜水清浅，暗香浮动月黄昏。',source:'林逋《山园小梅》'},{line:'江碧鸟逾白，山青花欲燃。',source:'杜甫《绝句二首·其二》'}];
+function dateHash(){const key='{{ today }}';let hash=0;for(const char of key)hash=(hash*31+char.charCodeAt(0))>>>0;return hash}
+function todayTheme(){return celebrationThemes[dateHash()%celebrationThemes.length]}
+function todayVerse(){return celebrationVerses[(dateHash()*7+3)%celebrationVerses.length]}
+function renderCelebration(){header.hidden=true;const theme=todayTheme(),verse=todayVerse();app.innerHTML=`<section class="celebration ${theme.className}" aria-label="今日复习完成"><span class="firework one"></span><span class="firework two"></span><span class="firework three"></span><div class="celebration-content"><div class="celebration-kicker">${theme.kicker}</div><div class="celebration-icon">${theme.icon}</div><h1>${theme.title}</h1><p class="celebration-message">${verse.line}<span class="verse-source">— ${verse.source}</span></p><div class="celebration-total">今日 ${cards.length} 张 · 词库共 {{ total_words }} 个单词</div><button class="celebration-back" data-review-again>回看今天的卡片</button></div></section>`;document.querySelector('[data-review-again]').addEventListener('click',()=>{showingCelebration=false;index=cards.length-1;showingBack=true;render()})}
+function render(){if(!cards.length){header.hidden=true;app.innerHTML=`<div class="empty"><h1>今天没有到期卡片</h1><p>词库共 {{ total_words }} 个单词。</p></div>`;return}if(showingCelebration){renderCelebration();return}header.hidden=false;const done=cards.filter(c=>c.answered).length;count.textContent=`${index+1} / ${cards.length}`;progressFill.style.width=`${done/cards.length*100}%`;const card=cards[index];app.innerHTML=`<article id="card" class="card${showingBack?' is-flipped':''}" tabindex="0" aria-label="点击翻转卡片">${front(card)}${back(card)}</article>`;bind(card)}
+function bind(card){const el=document.getElementById('card');syncCardHeight(el);el.addEventListener('click',e=>{if(!e.target.closest('button')){showingBack=!showingBack;render()}});el.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&!e.target.closest('button')){e.preventDefault();showingBack=!showingBack;render()}});document.querySelectorAll('[data-audio]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();playAudio(card,b)}));document.querySelectorAll('[data-prev]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();move(-1)}));document.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();move(1)}));document.querySelectorAll('[data-answer]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();answer(e.currentTarget.dataset.answer==='true')}))}
+function syncCardHeight(card){const faces=[...card.querySelectorAll('.face')];card.style.height='';const required=Math.max(...faces.map(face=>face.scrollHeight));card.style.height=`${required}px`}
+function move(delta){const next=index+delta;if(next<0)return;if(next>=cards.length){if(delta>0&&allAnswered()){showingCelebration=true;render()}return}index=next;showingBack=cards[index].answered;render();window.scrollTo({top:0,behavior:'smooth'})}
+function nextUnansweredAfter(fromIndex){for(let offset=1;offset<=cards.length;offset++){const candidate=(fromIndex+offset)%cards.length;if(!cards[candidate].answered)return candidate}return-1}
+async function answer(good){if(submitting)return;const answeredIndex=index,card=cards[answeredIndex],wasAnswered=card.answered;submitting=true;document.querySelectorAll('[data-answer],[data-prev],[data-next]').forEach(b=>b.disabled=true);try{let dailyCorrect=wasAnswered?(Boolean(card.correct)&&good):good;if(!previewMode){const response=await fetch('/review/answer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({word:card.word,correct:good})});if(!response.ok)throw new Error('answer request failed');const result=await response.json();dailyCorrect=Boolean(result.correct)}card.answered=true;card.correct=dailyCorrect;const nextIndex=nextUnansweredAfter(answeredIndex);submitting=false;if(nextIndex>=0){index=nextIndex;showingBack=false}else{index=answeredIndex;showingBack=true;showingCelebration=true}render();window.scrollTo({top:0,behavior:'smooth'})}catch(error){submitting=false;index=answeredIndex;showingBack=true;render();alert('保存复习结果失败，请稍后重试。')}}
+function speak(word,button){if(!('speechSynthesis'in window)){button.classList.add('is-error');return}const u=new SpeechSynthesisUtterance(word);u.lang='en-US';u.rate=.85;u.onend=()=>button.classList.remove('is-playing');u.onerror=()=>{button.classList.remove('is-playing');button.classList.add('is-error')};speechSynthesis.cancel();speechSynthesis.speak(u)}
+function playAudio(card,button){document.querySelectorAll('.audio').forEach(b=>b.classList.remove('is-playing','is-error'));button.classList.add('is-playing');if(!card.audio_url){speak(card.word,button);return}const audio=new Audio(card.audio_url);let fellBack=false;const fallback=()=>{if(fellBack)return;fellBack=true;speak(card.word,button)};audio.addEventListener('ended',()=>button.classList.remove('is-playing'),{once:true});audio.addEventListener('error',fallback,{once:true});const promise=audio.play();if(promise)promise.catch(fallback)}
+window.addEventListener('resize',()=>{const card=document.getElementById('card');if(card)requestAnimationFrame(()=>syncCardHeight(card))});
+render();
 </script>
 </body>
 </html>

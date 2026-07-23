@@ -9,6 +9,10 @@ class CollectWordRequest(BaseModel):
     word: str = Field(min_length=1, max_length=80)
     sentence: str = Field(min_length=1, max_length=2000)
     source_url: str | None = Field(default=None, max_length=2000)
+    definitions: list[str] = Field(default_factory=list, max_length=3)
+    part_of_speech: str | None = Field(default=None, max_length=80)
+    phonetic: str | None = Field(default=None, max_length=200)
+    audio_url: str | None = Field(default=None, max_length=2000)
 
 
 class ReviewAnswerRequest(BaseModel):
@@ -27,5 +31,5 @@ class DictEntry:
 @dataclass(frozen=True)
 class EnrichedSentence:
     answer_zh: str
-    distractors: list[str]
+    definition_zh: str
     trans_zh: str

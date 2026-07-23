@@ -47,12 +47,20 @@
     };
   }
 
-  async function collectWord({word, sentence, sourceUrl}) {
+  async function collectWord({word, sentence, sourceUrl, dictionaryEntry}) {
     const serverUrl = await getServerUrl();
     const response = await fetch(`${serverUrl}/words`, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({word, sentence, source_url: sourceUrl})
+      body: JSON.stringify({
+        word,
+        sentence,
+        source_url: sourceUrl,
+        definitions: dictionaryEntry?.definitions || [],
+        part_of_speech: dictionaryEntry?.partOfSpeech || null,
+        phonetic: dictionaryEntry?.phonetic || null,
+        audio_url: dictionaryEntry?.audioUrl || null
+      })
     });
     if (!response.ok) throw new Error(`Collect failed: ${response.status}`);
     return response.json();

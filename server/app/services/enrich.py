@@ -33,12 +33,12 @@ def enrich_pending(conn: sqlite3.Connection, settings: Settings, limit: int = 20
         conn.execute(
             """
             UPDATE sentences
-            SET answer_zh = ?, distractors = ?, trans_zh = ?, enriched = 1
+            SET answer_zh = ?, definition_zh = ?, trans_zh = ?, enriched = 1
             WHERE id = ?
             """,
             (
                 enriched.answer_zh,
-                json.dumps(enriched.distractors, ensure_ascii=False),
+                enriched.definition_zh,
                 enriched.trans_zh,
                 row["id"],
             ),
