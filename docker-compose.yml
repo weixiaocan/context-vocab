@@ -1,4 +1,18 @@
 services:
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+    depends_on:
+      - vocab-server
+
   vocab-server:
     build: ./server
     ports:
@@ -9,3 +23,7 @@ services:
       - ./server/data:/app/data
       - ./server/config.yaml:/app/config.yaml:ro
     restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

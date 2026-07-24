@@ -1,0 +1,4 @@
+vocab.weixiaocan.com {
+    encode zstd gzip
+    reverse_proxy vocab-server:8000
+}
