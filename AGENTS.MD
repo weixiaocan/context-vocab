@@ -49,3 +49,13 @@ This is not about banning specific words like `揭秘`; it is about making the q
   - during long sessions, roughly every 30-60 minutes when there is a stable checkpoint.
 - Avoid pushing broken or obviously unfinished intermediate states unless explicitly asked.
 - Keep commits small enough to understand, but not so small that every file tweak becomes a remote push.
+
+## Deployment Status
+
+- Server: Alibaba Cloud ECS, Hong Kong region, Ubuntu 22.04, 2 vCPU/2 GiB.
+- Domain: `vocab.weixiaocan.com`; HTTPS is provided by Caddy with automatic certificates.
+- Runtime: Docker Compose; `vocab-server` is private on `127.0.0.1:8001`, Caddy exposes ports 80/443.
+- Data: SQLite at `server/data/vocab.db`, persisted outside the container. Back up before updates.
+- Security: keep `server/.env` and `ACCESS_TOKEN` out of Git; never expose secrets in logs or chat. Do not open port 8001 publicly.
+- Update flow: local test → commit/push → server `git pull --ff-only` → `docker compose up -d --build` → health-check `/health`.
+- Current state: deployed and verified; local vocabulary data has been migrated to the server.
