@@ -37,7 +37,7 @@ def create_app() -> FastAPI:
 
     @app.middleware("http")
     async def require_access_token(request, call_next):
-        if request.url.path in {"/health", "/login"}:
+        if request.method == "OPTIONS" or request.url.path in {"/health", "/login"}:
             return await call_next(request)
         supplied = request.headers.get("X-Access-Token") or request.cookies.get(COOKIE_NAME)
         if valid_access_token(settings.access_token, supplied):

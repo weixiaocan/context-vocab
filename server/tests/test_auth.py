@@ -45,6 +45,15 @@ def test_app_remembers_browser_login_and_rejects_unauthorized_api(monkeypatch, t
 
     with TestClient(main.create_app()) as client:
         assert client.get("/health").status_code == 200
+        preflight = client.options(
+            "/dictionary/lookup?word=test",
+            headers={
+                "Origin": "https://reader.example",
+                "Access-Control-Request-Method": "GET",
+                "Access-Control-Request-Headers": "x-access-token",
+            },
+        )
+        assert preflight.status_code == 200
         assert client.get("/dictionary/lookup?word=test").status_code == 401
         redirect = client.get("/review", follow_redirects=False)
         assert redirect.status_code == 303
