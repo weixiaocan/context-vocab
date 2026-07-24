@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "description": "划词查词，并把想记住的词加入生词卡。",
   "permissions": ["storage"],
+  "options_page": "options.html",
   "background": {
     "service_worker": "background.js"
   },

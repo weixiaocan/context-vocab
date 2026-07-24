@@ -2,7 +2,7 @@ services:
   vocab-server:
     build: ./server
     ports:
-      - "8001:8000"
+      - "127.0.0.1:8001:8000"
     env_file:
       - ./server/.env
     volumes:

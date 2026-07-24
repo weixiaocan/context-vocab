@@ -27,6 +27,7 @@ class Settings:
     llm_enabled: bool
     feishu_webhook_url: str | None
     timezone: str
+    access_token: str | None = None
 
     @property
     def daily_review_words(self) -> int:
@@ -67,6 +68,7 @@ def load_settings(config_path: str | Path | None = None) -> Settings:
         llm_enabled=_as_bool(os.getenv("LLM_ENABLED"), True),
         feishu_webhook_url=os.getenv("FEISHU_WEBHOOK_URL"),
         timezone=str(data.get("timezone", "Asia/Shanghai")),
+        access_token=os.getenv("ACCESS_TOKEN"),
     )
     _validate(settings)
     return settings

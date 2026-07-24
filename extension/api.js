@@ -1,17 +1,26 @@
 (function () {
   const DEFAULT_SERVER_URL = "http://127.0.0.1:8001";
 
-  async function getServerUrl() {
-    const stored = await chrome.storage.sync.get(["serverUrl"]);
-    return (stored.serverUrl || DEFAULT_SERVER_URL).replace(/\/$/, "");
+  async function getServerConfig() {
+    const stored = await chrome.storage.local.get(["serverUrl", "accessToken"]);
+    return {
+      serverUrl: (stored.serverUrl || DEFAULT_SERVER_URL).replace(/\/$/, ""),
+      accessToken: stored.accessToken || ""
+    };
+  }
+
+  function authHeaders(accessToken, extra = {}) {
+    return accessToken ? {...extra, "X-Access-Token": accessToken} : extra;
   }
 
   async function lookupWord(word, sentence = "") {
     try {
-      const serverUrl = await getServerUrl();
+      const {serverUrl, accessToken} = await getServerConfig();
       const params = new URLSearchParams({word});
       if (sentence) params.set("sentence", sentence);
-      const response = await fetch(`${serverUrl}/dictionary/lookup?${params.toString()}`);
+      const response = await fetch(`${serverUrl}/dictionary/lookup?${params.toString()}`, {
+        headers: authHeaders(accessToken)
+      });
       if (response.ok) return response.json();
       if (response.status !== 404) throw new Error(`Backend dictionary failed: ${response.status}`);
     } catch (error) {
@@ -48,10 +57,10 @@
   }
 
   async function collectWord({word, sentence, sourceUrl, dictionaryEntry}) {
-    const serverUrl = await getServerUrl();
+    const {serverUrl, accessToken} = await getServerConfig();
     const response = await fetch(`${serverUrl}/words`, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: authHeaders(accessToken, {"Content-Type": "application/json"}),
       body: JSON.stringify({
         word,
         sentence,
