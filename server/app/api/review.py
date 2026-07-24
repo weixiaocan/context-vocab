@@ -9,6 +9,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.models import ReviewAnswerRequest
 from app.services import deck
+from app.services.audio_cache import public_audio_url
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -22,6 +23,9 @@ def review_page(request: Request, rebuild: bool = False) -> HTMLResponse:
         if rebuild
         else deck.get_or_create_daily_deck(request.app.state.db, request.app.state.settings, today)
     )
+    for card in cards:
+        if not card.get("audio_url"):
+            card["audio_url"] = public_audio_url(card["word"])
     backlog = deck.backlog_count(request.app.state.db)
     total_words = deck.total_word_count(request.app.state.db)
     pending_enrichment = deck.pending_enrichment_count(request.app.state.db)

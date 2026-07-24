@@ -5,7 +5,7 @@ from urllib.parse import quote
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel
 
 from app.api import collect, dictionary, review
@@ -13,6 +13,7 @@ from app.auth import COOKIE_NAME, valid_access_token
 from app.config import load_settings
 from app.db import connect, init_db
 from app.scheduler import start_scheduler
+from app.services.audio_cache import get_audio_file
 
 logging.basicConfig(level=logging.INFO)
 
@@ -54,6 +55,16 @@ def create_app() -> FastAPI:
     @app.get("/health")
     def health() -> dict[str, bool]:
         return {"ok": True}
+
+    @app.get("/audio/{word}.mp3")
+    def audio(word: str) -> FileResponse:
+        try:
+            path = get_audio_file(word, settings)
+        except Exception:
+            path = None
+        if not path:
+            return JSONResponse({"detail": "audio not found"}, status_code=404)
+        return FileResponse(path, media_type="audio/mpeg")
 
     @app.get("/login", response_class=HTMLResponse)
     def login_page() -> HTMLResponse:
