@@ -20,6 +20,20 @@ logging.basicConfig(level=logging.INFO)
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
+# Exact paths served without the access token. Browsers fetch the PWA manifest,
+# service worker and icons without credentials, so these must stay public.
+PUBLIC_PATHS = frozenset(
+    {
+        "/health",
+        "/login",
+        "/manifest.webmanifest",
+        "/sw.js",
+        "/icon-192.png",
+        "/icon-512.png",
+        "/icon-maskable-512.png",
+    }
+)
+
 
 class LoginRequest(BaseModel):
     token: str
@@ -41,7 +55,7 @@ def create_app() -> FastAPI:
 
     @app.middleware("http")
     async def require_access_token(request, call_next):
-        if request.method == "OPTIONS" or request.url.path in {"/health", "/login"}:
+        if request.method == "OPTIONS" or request.url.path in PUBLIC_PATHS:
             return await call_next(request)
         supplied = request.headers.get("X-Access-Token") or request.cookies.get(COOKIE_NAME)
         if valid_access_token(settings.access_token, supplied):
