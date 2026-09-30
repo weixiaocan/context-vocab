@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class CollectWordRequest(BaseModel):
@@ -13,6 +13,23 @@ class CollectWordRequest(BaseModel):
     part_of_speech: str | None = Field(default=None, max_length=80)
     phonetic: str | None = Field(default=None, max_length=200)
     audio_url: str | None = Field(default=None, max_length=2000)
+    answer_zh: str | None = Field(default=None, max_length=500)
+    definition_zh: str | None = Field(default=None, max_length=2000)
+    trans_zh: str | None = Field(default=None, max_length=4000)
+
+    @model_validator(mode="after")
+    def enrichment_is_complete(self) -> "CollectWordRequest":
+        values = (self.answer_zh, self.definition_zh, self.trans_zh)
+        if any(value is not None for value in values) and not all(
+            value is not None and value.strip() for value in values
+        ):
+            raise ValueError("answer_zh, definition_zh, and trans_zh must be supplied together")
+        return self
+
+
+class ExplainRequest(BaseModel):
+    term: str = Field(min_length=1, max_length=80)
+    sentence: str = Field(min_length=1, max_length=2000)
 
 
 class ReviewAnswerRequest(BaseModel):

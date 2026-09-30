@@ -28,6 +28,13 @@ class Settings:
     feishu_webhook_url: str | None
     timezone: str
     access_token: str | None = None
+    translation_provider: str = "auto"
+    baidu_app_id: str | None = None
+    baidu_secret: str | None = None
+    baidu_base_url: str = "https://fanyi-api.baidu.com/api/trans/vip/translate"
+    tencent_translation_api_key: str | None = None
+    tencent_translation_base_url: str = "https://tokenhub.tencentmaas.com/v1"
+    tencent_translation_model: str = "hy-mt2-plus"
 
     @property
     def daily_review_words(self) -> int:
@@ -66,9 +73,20 @@ def load_settings(config_path: str | Path | None = None) -> Settings:
         deepseek_base_url=os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
         deepseek_model=os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash"),
         llm_enabled=_as_bool(os.getenv("LLM_ENABLED"), True),
+        tencent_translation_api_key=os.getenv("TENCENT_TRANSLATION_API_KEY"),
+        tencent_translation_base_url=os.getenv(
+            "TENCENT_TRANSLATION_BASE_URL", "https://tokenhub.tencentmaas.com/v1"
+        ),
+        tencent_translation_model=os.getenv("TENCENT_TRANSLATION_MODEL", "hy-mt2-plus"),
         feishu_webhook_url=os.getenv("FEISHU_WEBHOOK_URL"),
         timezone=str(data.get("timezone", "Asia/Shanghai")),
         access_token=os.getenv("ACCESS_TOKEN"),
+        translation_provider=os.getenv("TRANSLATION_PROVIDER", "auto"),
+        baidu_app_id=os.getenv("BAIDU_APP_ID"),
+        baidu_secret=os.getenv("BAIDU_SECRET"),
+        baidu_base_url=os.getenv(
+            "BAIDU_BASE_URL", "https://fanyi-api.baidu.com/api/trans/vip/translate"
+        ),
     )
     _validate(settings)
     return settings

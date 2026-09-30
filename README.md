@@ -25,6 +25,10 @@ python -m uvicorn app.main:app --reload --port 8001
 - 参数放在 `server/config.yaml`。
 - 密钥放在 `server/.env`，不要提交真实密钥。
 - DeepSeek 默认模型是 `deepseek-v4-flash`，可通过 `DEEPSEEK_MODEL` 覆盖。
+- 划词即时翻译使用腾讯云 TokenHub 混元翻译模型。在 `server/.env` 中填写
+  `TENCENT_TRANSLATION_API_KEY`；默认接口为 `https://tokenhub.tencentmaas.com/v1`，
+  默认模型为 `hy-mt2-plus`，可分别通过 `TENCENT_TRANSLATION_BASE_URL` 和
+  `TENCENT_TRANSLATION_MODEL` 覆盖。
 - Merriam-Webster 词典默认使用 Learner's API，把 key 写到 `MERRIAM_WEBSTER_LEARNERS_KEY`。普通 Dictionary API key 可写到 `MERRIAM_WEBSTER_DICTIONARY_KEY` 备用。
 - 修改词典 key 后重启服务；要刷新已有词条的释义/音标/音频，运行 `python scripts/refresh_dictionary.py`。
 

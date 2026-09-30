@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, BackgroundTasks, Request
 
-from app.models import CollectWordRequest, DictEntry
+from app.models import CollectWordRequest, DictEntry, EnrichedSentence
 from app.services import deck, enrich
 
 router = APIRouter()
@@ -10,6 +10,13 @@ router = APIRouter()
 
 @router.post("/words")
 def collect_word(payload: CollectWordRequest, request: Request, background_tasks: BackgroundTasks) -> dict[str, object]:
+    enriched_sentence = None
+    if payload.answer_zh and payload.definition_zh and payload.trans_zh:
+        enriched_sentence = EnrichedSentence(
+            answer_zh=payload.answer_zh.strip(),
+            definition_zh=payload.definition_zh.strip(),
+            trans_zh=payload.trans_zh.strip(),
+        )
     sentence_id = deck.collect_word(
         request.app.state.db,
         request.app.state.settings,
@@ -22,6 +29,8 @@ def collect_word(payload: CollectWordRequest, request: Request, background_tasks
             phonetic=payload.phonetic,
             audio_url=payload.audio_url,
         ),
+        enriched_sentence,
     )
-    background_tasks.add_task(enrich.enrich_pending, request.app.state.db, request.app.state.settings, 5)
+    if enriched_sentence is None:
+        background_tasks.add_task(enrich.enrich_pending, request.app.state.db, request.app.state.settings, 5)
     return {"ok": True, "word": payload.word.strip().lower(), "sentence_id": sentence_id}

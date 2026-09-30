@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from urllib.parse import quote
 
 from fastapi import FastAPI
@@ -8,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel
 
-from app.api import collect, dictionary, review
+from app.api import collect, dictionary, explain, review
 from app.auth import COOKIE_NAME, valid_access_token
 from app.config import load_settings
 from app.db import connect, init_db
@@ -16,6 +17,8 @@ from app.scheduler import start_scheduler
 from app.services.audio_cache import get_audio_file
 
 logging.basicConfig(level=logging.INFO)
+
+STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 
 class LoginRequest(BaseModel):
@@ -49,8 +52,28 @@ def create_app() -> FastAPI:
         return JSONResponse({"detail": "invalid access token"}, status_code=401)
 
     app.include_router(dictionary.router)
+    app.include_router(explain.router)
     app.include_router(collect.router)
     app.include_router(review.router)
+
+    @app.get("/manifest.webmanifest")
+    def web_manifest() -> FileResponse:
+        return FileResponse(
+            STATIC_DIR / "manifest.webmanifest",
+            media_type="application/manifest+json",
+        )
+
+    @app.get("/sw.js")
+    def service_worker() -> FileResponse:
+        return FileResponse(
+            STATIC_DIR / "sw.js", media_type="application/javascript"
+        )
+
+    for icon_name in ("icon-192.png", "icon-512.png", "icon-maskable-512.png"):
+        def _icon(icon_name: str = icon_name) -> FileResponse:
+            return FileResponse(STATIC_DIR / icon_name, media_type="image/png")
+
+        app.add_api_route(f"/{icon_name}", _icon)
 
     @app.get("/health")
     def health() -> dict[str, bool]:

@@ -6,7 +6,7 @@ import pytest
 
 from app.config import Settings
 from app.db import init_db
-from app.models import DictEntry
+from app.models import DictEntry, EnrichedSentence
 from app.services import deck
 
 
@@ -86,6 +86,27 @@ def test_collect_same_sentence_is_idempotent(conn, settings):
     assert count["count"] == 1
     assert word["remaining"] == 1
     assert word["status"] == "active"
+
+
+def test_collect_can_store_pretranslated_sentence_without_pending_enrichment(conn, settings):
+    sentence_id = deck.collect_word(
+        conn,
+        settings,
+        "in a nutshell",
+        "In a nutshell, diffusion can generate in parallel.",
+        "obsidian://open?vault=obsidian&file=article.md",
+        None,
+        EnrichedSentence(
+            answer_zh="简而言之",
+            definition_zh="简而言之",
+            trans_zh="简而言之，扩散可以并行生成。",
+        ),
+    )
+
+    row = conn.execute("SELECT * FROM sentences WHERE id = ?", (sentence_id,)).fetchone()
+    assert row["enriched"] == 1
+    assert row["answer_zh"] == "简而言之"
+    assert row["trans_zh"] == "简而言之，扩散可以并行生成。"
 
 
 def test_collect_saves_dictionary_result_from_extension(conn, settings):

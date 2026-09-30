@@ -12,9 +12,13 @@ def send_review_reminder(settings: Settings, card_count: int) -> bool:
         return False
 
     review_url = settings.public_base_url.rstrip("/") + "/review"
+    text = (
+        f"今天有 {card_count} 张卡：{review_url}\n"
+        "安卓用 Chrome 打开后，菜单选「添加到主屏幕」，可全屏复习。"
+    )
     payload = {
         "msg_type": "text",
-        "content": {"text": f"今天有 {card_count} 张卡：{review_url}"},
+        "content": {"text": text},
     }
     for attempt in range(3):
         try:

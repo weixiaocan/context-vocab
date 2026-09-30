@@ -6,7 +6,7 @@ from datetime import date, timedelta
 from typing import Any
 
 from app.config import Settings
-from app.models import DictEntry
+from app.models import DictEntry, EnrichedSentence
 
 
 def collect_word(
@@ -16,6 +16,7 @@ def collect_word(
     sentence: str,
     source_url: str | None,
     dictionary_entry: DictEntry | None = None,
+    enriched_sentence: EnrichedSentence | None = None,
 ) -> int:
     normalized = word.strip().lower()
     normalized_sentence = sentence.strip()
@@ -26,6 +27,20 @@ def collect_word(
     ).fetchone()
     if duplicate:
         _save_dictionary_entry(conn, normalized, dictionary_entry)
+        if enriched_sentence:
+            conn.execute(
+                """
+                UPDATE sentences
+                SET answer_zh = ?, definition_zh = ?, trans_zh = ?, enriched = 1
+                WHERE id = ?
+                """,
+                (
+                    enriched_sentence.answer_zh,
+                    enriched_sentence.definition_zh,
+                    enriched_sentence.trans_zh,
+                    duplicate["id"],
+                ),
+            )
         conn.commit()
         return int(duplicate["id"])
 
@@ -63,10 +78,20 @@ def collect_word(
 
     cursor = conn.execute(
         """
-        INSERT INTO sentences (word, sentence, source_url, enriched)
-        VALUES (?, ?, ?, 0)
+        INSERT INTO sentences (
+            word, sentence, source_url, answer_zh, definition_zh, trans_zh, enriched
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
-        (normalized, normalized_sentence, source_url),
+        (
+            normalized,
+            normalized_sentence,
+            source_url,
+            enriched_sentence.answer_zh if enriched_sentence else None,
+            enriched_sentence.definition_zh if enriched_sentence else None,
+            enriched_sentence.trans_zh if enriched_sentence else None,
+            1 if enriched_sentence else 0,
+        ),
     )
     conn.commit()
     return int(cursor.lastrowid)

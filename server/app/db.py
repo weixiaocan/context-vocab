@@ -62,6 +62,15 @@ def init_db(conn: sqlite3.Connection) -> None:
             answered_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
 
+        CREATE TABLE IF NOT EXISTS translation_cache (
+            term TEXT NOT NULL,
+            sentence TEXT NOT NULL,
+            answer_zh TEXT NOT NULL,
+            trans_zh TEXT NOT NULL,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (term, sentence)
+        );
+
         CREATE INDEX IF NOT EXISTS idx_sentences_word_created
             ON sentences(word, created_at DESC);
         CREATE INDEX IF NOT EXISTS idx_sentences_enriched

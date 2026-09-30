@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import logging
+from datetime import date
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from app.config import Settings
 from app.db import connect, init_db
-from app.services import enrich, push
+from app.services import deck, enrich, push
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,8 @@ def _send_push(settings: Settings) -> None:
     conn = connect(settings.db_path)
     try:
         init_db(conn)
-        ok = push.send_review_reminder(settings, settings.daily_cards)
+        cards = deck.get_or_create_daily_deck(conn, settings, date.today())
+        ok = push.send_review_reminder(settings, len(cards))
         if not ok:
             logger.error("Feishu push failed or webhook is not configured")
     finally:
