@@ -48,6 +48,53 @@
   margin-top: 6px;
 }
 
+.vocab-card-zh {
+  margin-top: 9px;
+  color: #202b1e;
+  font-size: 21px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.vocab-card-en {
+  margin-top: 10px;
+  border-top: 1px dashed #e2e6ec;
+  padding-top: 8px;
+}
+
+.vocab-card-en summary {
+  cursor: pointer;
+  color: #58664f;
+  font-size: 13px;
+  font-weight: 650;
+  list-style: none;
+}
+
+.vocab-card-en summary::-webkit-details-marker {
+  display: none;
+}
+
+.vocab-card-en summary::after {
+  content: " ▾";
+}
+
+.vocab-card-en[open] summary::after {
+  content: " ▴";
+}
+
+.vocab-card-en ol {
+  margin-top: 6px;
+}
+
+.vocab-card-trans {
+  margin-top: 10px;
+  border-left: 3px solid #d9dee7;
+  padding-left: 9px;
+  color: #667085;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
 .vocab-card-popup ol {
   display: block;
   margin: 10px 0 0;
@@ -71,7 +118,7 @@
   border: 0;
   border-radius: 8px;
   padding: 8px 10px;
-  background: #2563eb;
+  background: #58664f;
   color: #fff;
   cursor: pointer;
   font-size: 14px;

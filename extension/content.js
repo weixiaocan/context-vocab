@@ -75,66 +75,100 @@
     } else {
       const entry = state.entry;
       const audioButton = `<button class="vocab-card-audio" type="button" data-action="play" aria-label="播放 ${escapeHtml(word)} 的发音" title="${entry.audioUrl ? "音频加载中" : "使用浏览器语音播放"}" ${entry.audioUrl ? "disabled" : ""}>🔊</button>`;
-      popup.innerHTML = popupHtml(word, `
-        <div class="vocab-card-meta">${escapeHtml(entry.phonetic || "")} ${escapeHtml(entry.partOfSpeech || "")}</div>
-        <ol>${entry.definitions.map(def => `<li>${escapeHtml(def)}</li>`).join("") || "<li>暂无释义</li>"}</ol>
-        <div class="vocab-card-actions">
-          <button type="button" data-action="collect" ${entry.collected ? "disabled" : ""}>${entry.collected ? "已加入" : "加入生词本"}</button>
-        </div>
-        <div class="vocab-card-status"></div>
-      `, audioButton);
-      const playButton = popup.querySelector('[data-action="play"]');
-      if (playButton) {
-        if (!entry.audioUrl) {
-          playButton.addEventListener("click", event => {
-            event.stopPropagation();
-            const utterance = new SpeechSynthesisUtterance(word);
-            utterance.lang = "en-US";
-            window.speechSynthesis.cancel();
-            window.speechSynthesis.speak(utterance);
-          });
-        } else {
-        let audioContext = null;
-        let audioBuffer = null;
-        window.VocabCardApi.loadAudio(entry.audioUrl).then(async audioData => {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          if (!AudioContext) throw new Error("Web Audio API is unavailable");
-          audioContext = new AudioContext();
-          audioBuffer = await audioContext.decodeAudioData(audioData);
-          playButton.disabled = false;
-          playButton.title = "播放发音";
-        }).catch(error => {
-          playButton.title = "音频加载失败";
-          const status = popup?.querySelector(".vocab-card-status");
-          if (status) status.textContent = isInvalidExtensionContext(error)
-            ? "插件已更新，请刷新页面"
-            : "发音加载失败";
-          console.warn("Vocab Card audio loading failed", error);
-        });
-        playButton.addEventListener("click", event => {
-          event.stopPropagation();
-          if (!audioContext || !audioBuffer) return;
-          audioContext.resume().then(() => {
-            const source = audioContext.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(audioContext.destination);
-            source.start(0);
-            const status = popup?.querySelector(".vocab-card-status");
-            if (status) status.textContent = "";
-          }).catch(error => {
-            const status = popup?.querySelector(".vocab-card-status");
-            if (status) status.textContent = "发音播放失败";
-            console.warn("Vocab Card audio playback failed", error);
-          });
-        });
-        }
-      }
+      popup.innerHTML = popupHtml(word, entryBodyHtml(entry), audioButton);
+      bindAudio(word, entry);
       popup.querySelector('[data-action="collect"]')?.addEventListener("click", collectCurrentWord);
     }
 
     document.body.appendChild(popup);
     positionPopup(rect);
     popup.style.visibility = "visible";
+  }
+
+  function entryBodyHtml(entry) {
+    const meta = `<div class="vocab-card-meta">${escapeHtml(entry.phonetic || "")} ${escapeHtml(entry.partOfSpeech || "")}</div>`;
+    const actions = `
+      <div class="vocab-card-actions">
+        <button type="button" data-action="collect" ${entry.collected ? "disabled" : ""}>${entry.collected ? "已加入" : "加入生词本"}</button>
+      </div>
+      <div class="vocab-card-status"></div>
+    `;
+
+    if (entry.answer_zh) {
+      const definitions = (entry.definitions || []).filter(Boolean);
+      const english = definitions.length
+        ? definitions.map(def => `<li>${escapeHtml(def)}</li>`).join("")
+        : "<li>暂无释义</li>";
+      return `
+        ${meta}
+        <div class="vocab-card-zh">${escapeHtml(entry.answer_zh)}</div>
+        <details class="vocab-card-en">
+          <summary>英文释义</summary>
+          <ol>${english}</ol>
+        </details>
+        <div class="vocab-card-trans">${escapeHtml(entry.trans_zh || "")}</div>
+        ${actions}
+      `;
+    }
+
+    const definitions = (entry.definitions || []).filter(Boolean);
+    const english = definitions.length
+      ? definitions.map(def => `<li>${escapeHtml(def)}</li>`).join("")
+      : "<li>暂无释义</li>";
+    return `
+      ${meta}
+      <ol>${english}</ol>
+      ${actions}
+    `;
+  }
+
+  function bindAudio(word, entry) {
+    const playButton = popup.querySelector('[data-action="play"]');
+    if (!playButton) return;
+    if (!entry.audioUrl) {
+      playButton.addEventListener("click", event => {
+        event.stopPropagation();
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = "en-US";
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+      });
+      return;
+    }
+
+    let audioContext = null;
+    let audioBuffer = null;
+    window.VocabCardApi.loadAudio(entry.audioUrl).then(async audioData => {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) throw new Error("Web Audio API is unavailable");
+      audioContext = new AudioContext();
+      audioBuffer = await audioContext.decodeAudioData(audioData);
+      playButton.disabled = false;
+      playButton.title = "播放发音";
+    }).catch(error => {
+      playButton.title = "音频加载失败";
+      const status = popup?.querySelector(".vocab-card-status");
+      if (status) status.textContent = isInvalidExtensionContext(error)
+        ? "插件已更新，请刷新页面"
+        : "发音加载失败";
+      console.warn("Vocab Card audio loading failed", error);
+    });
+    playButton.addEventListener("click", event => {
+      event.stopPropagation();
+      if (!audioContext || !audioBuffer) return;
+      audioContext.resume().then(() => {
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioContext.destination);
+        source.start(0);
+        const status = popup?.querySelector(".vocab-card-status");
+        if (status) status.textContent = "";
+      }).catch(error => {
+        const status = popup?.querySelector(".vocab-card-status");
+        if (status) status.textContent = "发音播放失败";
+        console.warn("Vocab Card audio playback failed", error);
+      });
+    });
   }
 
   function positionPopup(rect) {
