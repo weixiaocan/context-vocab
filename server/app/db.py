@@ -82,6 +82,9 @@ def init_db(conn: sqlite3.Connection) -> None:
     _add_column_if_missing(conn, "words", "review_interval", "INTEGER NOT NULL DEFAULT 0")
     _add_column_if_missing(conn, "words", "due_date", "TEXT")
     _add_column_if_missing(conn, "sentences", "definition_zh", "TEXT")
+    _add_column_if_missing(conn, "words", "base_word", "TEXT")
+    _add_column_if_missing(conn, "words", "base_phonetic", "TEXT")
+    _add_column_if_missing(conn, "words", "base_audio_url", "TEXT")
     conn.execute(
         """
         UPDATE sentences

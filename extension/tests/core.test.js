@@ -5,7 +5,11 @@ const {
   normalizeWord,
   compactText,
   sentenceFromParts,
-  calculatePopupPosition
+  calculatePopupPosition,
+  pronunciationView,
+  youdaoAudioUrl,
+  audioCandidates,
+  audioFetchPlan
 } = require("../core.js");
 
 test("normalizeWord accepts supported English word forms", () => {
@@ -123,4 +127,86 @@ test("initialCollectStatus uses the lookup collected flag", () => {
   assert.equal(initialCollectStatus({collected: true}), "exists");
   assert.equal(initialCollectStatus({collected: false}), "idle");
   assert.equal(initialCollectStatus(null), "idle");
+});
+
+test("pronunciationView keeps exact-form audio and labels a different base form", () => {
+  const view = pronunciationView({
+    phonetic: "ˈteɪlərɪŋ",
+    audioUrl: "https://media.merriam-webster.com/audio/prons/en/us/mp3/t/tailor04.mp3",
+    baseWord: "tailor",
+    basePhonetic: "ˈteɪlɚ",
+    baseAudioUrl: ""
+  }, "tailoring");
+  assert.equal(view.phonetic, "ˈteɪlərɪŋ");
+  assert.match(view.audioUrl, /tailor04\.mp3$/);
+  assert.equal(view.speakText, "tailoring");
+  assert.deepEqual(view.base, {word: "tailor", phonetic: "ˈteɪlɚ", audioUrl: "", speakText: "tailor"});
+});
+
+test("pronunciationView never substitutes base audio when the exact form has none", () => {
+  const view = pronunciationView({
+    phonetic: "",
+    audioUrl: "",
+    baseWord: "civilization",
+    basePhonetic: "ˌsi-və-lə-ˈzā-shən",
+    baseAudioUrl: "https://media.merriam-webster.com/audio/prons/en/us/mp3/c/civili05.mp3"
+  }, "civilizations");
+  assert.equal(view.audioUrl, "", "main button must fall back to TTS of the selected word");
+  assert.equal(view.speakText, "civilizations");
+  assert.equal(view.base.word, "civilization");
+  assert.match(view.base.audioUrl, /civili05\.mp3$/);
+});
+
+test("pronunciationView hides base when it equals the word and accepts snake_case cards", () => {
+  assert.equal(pronunciationView({baseWord: "Running"}, "running").base, null);
+  const card = pronunciationView({word: "studies", base_word: "study", base_audio_url: "http://insecure/x.mp3"});
+  assert.equal(card.speakText, "studies");
+  assert.equal(card.base.audioUrl, "", "non-https URLs are ignored");
+  assert.equal(pronunciationView(null, "word").audioUrl, "");
+});
+
+const MW_TAILORING = "https://media.merriam-webster.com/audio/prons/en/us/mp3/t/tailor04.mp3";
+const SERVER = "https://vocab.weixiaocan.com";
+
+test("audioCandidates: exact MW recording first, then server proxy, then Youdao US", () => {
+  assert.deepEqual(audioCandidates(MW_TAILORING, "tailoring", SERVER + "/"), [
+    MW_TAILORING,
+    `${SERVER}/audio/tailoring.mp3`,
+    "https://dict.youdao.com/dictvoice?audio=tailoring&type=2"
+  ]);
+});
+
+test("audioCandidates without exact MW audio goes to the server proxy then Youdao", () => {
+  assert.deepEqual(audioCandidates("", "Civilizations", SERVER), [
+    `${SERVER}/audio/civilizations.mp3`,
+    "https://dict.youdao.com/dictvoice?audio=civilizations&type=2"
+  ]);
+});
+
+test("audioCandidates still offers Youdao when no server is configured, and ignores non-https MW urls", () => {
+  assert.deepEqual(audioCandidates("http://insecure/x.mp3", "went", ""), [
+    "https://dict.youdao.com/dictvoice?audio=went&type=2"
+  ]);
+  assert.deepEqual(audioCandidates("", "", SERVER), [], "nothing to play -> caller uses TTS");
+});
+
+test("audio URLs are URL-encoded", () => {
+  assert.equal(youdaoAudioUrl("a&type=1#x"), "https://dict.youdao.com/dictvoice?audio=a%26type%3D1%23x&type=2");
+  assert.equal(audioCandidates("", "a/b?c", "http://127.0.0.1:8001")[0], "http://127.0.0.1:8001/audio/a%2Fb%3Fc.mp3");
+});
+
+test("audioFetchPlan sends the access token only to the configured server", () => {
+  assert.deepEqual(audioFetchPlan(`${SERVER}/audio/went.mp3`, SERVER, "tok"), {headers: {"X-Access-Token": "tok"}});
+  assert.deepEqual(audioFetchPlan("http://127.0.0.1:8001/audio/went.mp3", "http://127.0.0.1:8001", "tok"),
+    {headers: {"X-Access-Token": "tok"}});
+  assert.deepEqual(audioFetchPlan("https://dict.youdao.com/dictvoice?audio=went&type=2", SERVER, "tok"), {headers: {}});
+  assert.deepEqual(audioFetchPlan(MW_TAILORING, SERVER, "tok"), {headers: {}});
+});
+
+test("audioFetchPlan rejects unknown hosts, http and look-alike server URLs", () => {
+  assert.equal(audioFetchPlan("https://attacker.example/x.mp3", SERVER, "tok"), null);
+  assert.equal(audioFetchPlan("http://dict.youdao.com/dictvoice?audio=went", SERVER, "tok"), null);
+  assert.equal(audioFetchPlan("https://vocab.weixiaocan.com.evil.example/audio/x.mp3", SERVER, "tok"), null);
+  assert.equal(audioFetchPlan("https://dict.youdao.com.evil.example/x.mp3", SERVER, "tok"), null);
+  assert.equal(audioFetchPlan(`${SERVER}/words`, SERVER, "tok"), null);
 });

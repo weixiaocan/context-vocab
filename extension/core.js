@@ -90,6 +90,85 @@
     return entry?.collected ? "exists" : "idle";
   }
 
+  // Pronunciation view model. The main phonetic/audio always belong to the exact
+  // selected form; a different base headword (e.g. "tailor" for "tailoring") is
+  // returned separately so it can be labelled instead of silently substituted.
+  // With no audio URL the caller speaks speakText with browser TTS.
+  function pronunciationView(entry, word) {
+    const target = compactText(word || entry?.word).toLowerCase();
+    const audioUrl = httpsUrl(entry?.audioUrl ?? entry?.audio_url);
+    const baseWord = compactText(entry?.baseWord ?? entry?.base_word).toLowerCase();
+    const base = baseWord && baseWord !== target
+      ? {
+          word: baseWord,
+          phonetic: compactText(entry?.basePhonetic ?? entry?.base_phonetic),
+          audioUrl: httpsUrl(entry?.baseAudioUrl ?? entry?.base_audio_url),
+          speakText: baseWord
+        }
+      : null;
+    return {
+      phonetic: compactText(entry?.phonetic),
+      audioUrl,
+      speakText: target,
+      base
+    };
+  }
+
+  const YOUDAO_VOICE = "https://dict.youdao.com/dictvoice";
+
+  // Youdao dictvoice clip for a word; type=2 is US English (matches MW), 1 is UK.
+  function youdaoAudioUrl(word) {
+    const text = compactText(word).toLowerCase();
+    return text ? `${YOUDAO_VOICE}?audio=${encodeURIComponent(text)}&type=2` : "";
+  }
+
+  function serverAudioUrl(word, serverUrl) {
+    const text = compactText(word).toLowerCase();
+    const base = compactText(serverUrl).replace(/\/+$/, "");
+    return text && /^https?:\/\//i.test(base) ? `${base}/audio/${encodeURIComponent(text)}.mp3` : "";
+  }
+
+  // Ordered audio sources for the selected word; the caller tries each in turn
+  // and speaks the word with browser TTS when all fail:
+  //   1. Merriam-Webster recording of this exact form (from the lookup),
+  //   2. the backend /audio proxy (MW -> Youdao, cached on the server),
+  //   3. Youdao directly, so audio still works when the backend is unreachable.
+  function audioCandidates(audioUrl, word, serverUrl) {
+    const candidates = [httpsUrl(audioUrl), serverAudioUrl(word, serverUrl), youdaoAudioUrl(word)];
+    return candidates.filter((url, index) => url && candidates.indexOf(url) === index);
+  }
+
+  // How the background worker may fetch an audio URL: https from a known
+  // pronunciation host, or the
+  // configured backend's /audio/ path (which may be http on localhost and needs
+  // the access token). Returns null for anything else.
+  function audioFetchPlan(url, serverUrl, accessToken) {
+    const target = compactText(url);
+    const base = compactText(serverUrl).replace(/\/+$/, "");
+    const isServer = Boolean(base) && /^https?:\/\//i.test(base) && target.startsWith(`${base}/audio/`);
+    if (isServer) {
+      return {headers: accessToken ? {"X-Access-Token": accessToken} : {}};
+    }
+    return AUDIO_HOSTS.has(httpsHost(target)) ? {headers: {}} : null;
+  }
+
+  // Third-party pronunciation hosts the extension may download from.
+  const AUDIO_HOSTS = new Set(["media.merriam-webster.com", "api.dictionaryapi.dev", "dict.youdao.com"]);
+
+  function httpsHost(url) {
+    try {
+      const parsed = new URL(url);
+      return parsed.protocol === "https:" && !parsed.username && !parsed.password ? parsed.hostname : "";
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function httpsUrl(value) {
+    const url = compactText(value);
+    return /^https:\/\//i.test(url) ? url : "";
+  }
+
   return {
     normalizeWord,
     compactText,
@@ -98,6 +177,11 @@
     escapeHtml,
     sentenceTranslation,
     collectButtonView,
-    initialCollectStatus
+    initialCollectStatus,
+    pronunciationView,
+    youdaoAudioUrl,
+    serverAudioUrl,
+    audioCandidates,
+    audioFetchPlan
   };
 });

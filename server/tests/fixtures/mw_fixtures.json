@@ -1,0 +1,1819 @@
+{
+ "learners/civilizations": [
+  {
+   "meta": {
+    "id": "civilization",
+    "stems": [
+     "civilization",
+     "civilisation",
+     "civilizations"
+    ]
+   },
+   "hwi": {
+    "hw": "civ*i*li*za*tion"
+   },
+   "fl": "noun",
+   "ins": [
+    {
+     "il": "plural",
+     "ifc": "-tions",
+     "if": "civ*i*li*za*tions"
+    }
+   ],
+   "shortdef": [
+    "the condition that exists when people have developed effective ways of organizing a society and care about art, science, etc.",
+    "a particular well-organized and developed society",
+    "all the societies of the world"
+   ]
+  }
+ ],
+ "learners/tailoring": [
+  {
+   "meta": {
+    "id": "tailor:2",
+    "stems": [
+     "tailor",
+     "tailored",
+     "tailoring",
+     "tailors"
+    ]
+   },
+   "hwi": {
+    "hw": "tailor",
+    "altprs": [
+     {
+      "ipa": "ˈteɪlɚ"
+     }
+    ]
+   },
+   "fl": "verb",
+   "ins": [
+    {
+     "ifc": "-lors",
+     "if": "tailors"
+    },
+    {
+     "ifc": "-lored",
+     "if": "tailored"
+    },
+    {
+     "ifc": "-lor*ing",
+     "if": "tailor*ing"
+    }
+   ],
+   "uros": [
+    {
+     "ure": "tai*lored",
+     "prs": [
+      {
+       "ipa": "ˈteɪlɚd",
+       "sound": {
+        "audio": "tailor03"
+       }
+      }
+     ],
+     "fl": "adjective",
+     "utxt": [
+      [
+       "vis",
+       [
+        {
+         "t": "He wore a nicely {it}tailored{/it} suit."
+        }
+       ]
+      ]
+     ]
+    },
+    {
+     "ure": "tail*or*ing",
+     "prs": [
+      {
+       "ipa": "ˈteɪlərɪŋ"
+      }
+     ],
+     "fl": "noun",
+     "gram": "noncount",
+     "utxt": [
+      [
+       "vis",
+       [
+        {
+         "t": "The store offers free {it}tailoring{/it}."
+        }
+       ]
+      ]
+     ]
+    }
+   ],
+   "shortdef": [
+    "to make (clothing that is measured to fit a particular person)",
+    "to make or change (something) so that it meets a special need or purpose"
+   ]
+  }
+ ],
+ "learners/running": [
+  {
+   "meta": {
+    "id": "running:1",
+    "stems": [
+     "running",
+     "in the running",
+     "out of the running",
+     "go running"
+    ]
+   },
+   "hwi": {
+    "hw": "run*ning",
+    "prs": [
+     {
+      "ipa": "ˈrʌnɪŋ",
+      "sound": {
+       "audio": "runnin01"
+      }
+     }
+    ]
+   },
+   "fl": "noun",
+   "shortdef": [
+    "the activity or sport of running",
+    "the activity of managing or operating something—usually + of",
+    "the activity of bringing drugs, guns, etc., to a place illegally and secretly"
+   ]
+  },
+  {
+   "meta": {
+    "id": "running:2",
+    "stems": [
+     "running",
+     "running joke/gag",
+     "running gag",
+     "running joke"
+    ]
+   },
+   "hwi": {
+    "hw": "running",
+    "altprs": [
+     {
+      "ipa": "ˈrʌnɪŋ"
+     }
+    ]
+   },
+   "fl": "adjective",
+   "shortdef": [
+    "operating or flowing",
+    "going on steadily or repeatedly for a long period of time",
+    "made during the course of a process or activity"
+   ]
+  },
+  {
+   "meta": {
+    "id": "running:3",
+    "stems": [
+     "running"
+    ]
+   },
+   "hwi": {
+    "hw": "running",
+    "altprs": [
+     {
+      "ipa": "ˈrʌnɪŋ"
+     }
+    ]
+   },
+   "fl": "adverb",
+   "shortdef": [
+    "following or happening one after the other"
+   ]
+  },
+  {
+   "meta": {
+    "id": "run:1",
+    "stems": [
+     "run",
+     "ran",
+     "run a fever",
+     "run a temperature",
+     "run a tight ship",
+     "run across",
+     "run after",
+     "run against",
+     "run by",
+     "run circles around",
+     "run dry",
+     "run interference",
+     "run into",
+     "run low on",
+     "run one's mouth",
+     "run her mouth",
+     "run his mouth",
+     "run their mouth",
+     "run past",
+     "run rings around",
+     "run riot",
+     "run short",
+     "run short of",
+     "run the numbers",
+     "run the table",
+     "run to",
+     "run upon",
+     "run with",
+     "running",
+     "runs",
+     "run a fever/temperature",
+     "run along",
+     "run around",
+     "run about",
+     "run round",
+     "run away",
+     "run by/past",
+     "run down",
+     "run for it",
+     "run high",
+     "run in",
+     "run its course",
+     "run off",
+     "run on",
+     "run out",
+     "run over",
+     "run through",
+     "run up",
+     "run your mouth",
+     "walk before you (can) run",
+     "walk before you can run",
+     "walk before you run",
+     "came running",
+     "running loose",
+     "ran wild",
+     "ran at",
+     "runs the bases",
+     "run my own life",
+     "up and running",
+     "running late",
+     "running low on",
+     "running low/short",
+     "running low",
+     "running short",
+     "ran short of",
+     "running behind schedule",
+     "ran a tab",
+     "running at",
+     "running a fever/temperature",
+     "running a fever",
+     "running a temperature",
+     "running up the score"
+    ]
+   },
+   "hwi": {
+    "hw": "run",
+    "prs": [
+     {
+      "ipa": "ˈrʌn",
+      "sound": {
+       "audio": "run00001"
+      }
+     }
+    ]
+   },
+   "fl": "verb",
+   "ins": [
+    {
+     "if": "runs"
+    },
+    {
+     "if": "ran",
+     "prs": [
+      {
+       "ipa": "ˈræn",
+       "sound": {
+        "audio": "run00002"
+       }
+      }
+     ]
+    },
+    {
+     "if": "run"
+    },
+    {
+     "if": "run*ning"
+    }
+   ],
+   "shortdef": [
+    "to move with your legs at a speed that is faster than walking —often used figuratively",
+    "to leave a place quickly by running —often + away —often + off",
+    "to run as part of a sport, for exercise, or in a race"
+   ]
+  },
+  {
+   "meta": {
+    "id": "running back",
+    "stems": [
+     "running back",
+     "running backs"
+    ]
+   },
+   "hwi": {
+    "hw": "running back"
+   },
+   "fl": "noun",
+   "ins": [
+    {
+     "il": "plural",
+     "ifc": "~ backs",
+     "if": "running backs"
+    }
+   ],
+   "shortdef": [
+    "a player who carries the football on running plays"
+   ]
+  }
+ ],
+ "learners/studies": [
+  {
+   "meta": {
+    "id": "study:1",
+    "stems": [
+     "study",
+     "studies",
+     "under study",
+     "course of study",
+     "made a study of",
+     "fast/quick study",
+     "fast study",
+     "quick study",
+     "slow study"
+    ]
+   },
+   "hwi": {
+    "hw": "study",
+    "prs": [
+     {
+      "ipa": "ˈstʌdi",
+      "sound": {
+       "audio": "study001"
+      }
+     }
+    ]
+   },
+   "fl": "noun",
+   "ins": [
+    {
+     "il": "plural",
+     "if": "stud*ies"
+    }
+   ],
+   "shortdef": [
+    "the activity or process of learning about something by reading, memorizing facts, attending school, etc.",
+    "an area of learning taught in a school : subject—usually plural",
+    "something that a person studies or gives attention to"
+   ]
+  },
+  {
+   "meta": {
+    "id": "study:2",
+    "stems": [
+     "study",
+     "studied",
+     "studier",
+     "studiers",
+     "studies",
+     "studying"
+    ]
+   },
+   "hwi": {
+    "hw": "study",
+    "altprs": [
+     {
+      "ipa": "ˈstʌdi"
+     }
+    ]
+   },
+   "fl": "verb",
+   "ins": [
+    {
+     "if": "studies"
+    },
+    {
+     "if": "stud*ied"
+    },
+    {
+     "if": "study*ing"
+    }
+   ],
+   "shortdef": [
+    "to read, memorize facts, attend school, etc., in order to learn about a subject",
+    "to give careful attention to (something)",
+    "to conduct an organized experiment in order to learn more about (something)"
+   ]
+  },
+  {
+   "meta": {
+    "id": "social studies",
+    "stems": [
+     "social studies"
+    ]
+   },
+   "hwi": {
+    "hw": "social studies"
+   },
+   "fl": "noun",
+   "shortdef": [
+    "a course of study that deals with human relationships and the way society works"
+   ]
+  },
+  {
+   "meta": {
+    "id": "women's studies",
+    "stems": [
+     "women's studies",
+     "womens studies"
+    ]
+   },
+   "hwi": {
+    "hw": "women's studies"
+   },
+   "fl": "noun",
+   "shortdef": [
+    "the study of subjects relating to women, their roles in history, and their contributions to society"
+   ]
+  },
+  {
+   "meta": {
+    "id": "case study",
+    "stems": [
+     "case study",
+     "case studies",
+     "case -ies"
+    ]
+   },
+   "hwi": {
+    "hw": "case study"
+   },
+   "fl": "noun",
+   "ins": [
+    {
+     "il": "plural",
+     "ifc": "~ -ies",
+     "if": "case -ies"
+    }
+   ],
+   "shortdef": [
+    "a published report about a person, group, or situation that has been studied over time; also : a situation in real life that can be looked at or studied to learn about something"
+   ]
+  }
+ ],
+ "learners/went": [
+  {
+   "meta": {
+    "id": "went",
+    "stems": [
+     "went",
+     "go"
+    ]
+   },
+   "hwi": {
+    "hw": "went"
+   },
+   "shortdef": []
+  },
+  {
+   "meta": {
+    "id": "go:1",
+    "stems": [
+     "go",
+     "go about",
+     "go after",
+     "go all the way",
+     "go at",
+     "go back on",
+     "go begging",
+     "go by the board",
+     "go easy",
+     "go fly a kite",
+     "go for",
+     "go for broke",
+     "go great guns",
+     "go hang",
+     "go into",
+     "go it",
+     "go missing",
+     "go one better",
+     "go over",
+     "go places",
+     "go public",
+     "go steady",
+     "go through",
+     "go to bat for",
+     "go to bed with",
+     "go to one's head",
+     "go to her head",
+     "go to his head",
+     "go to their head",
+     "go to pieces",
+     "go to the mat",
+     "go to town",
+     "go with",
+     "go with the flow",
+     "go without saying",
+     "goer",
+     "goers",
+     "goes",
+     "goes about",
+     "goes over",
+     "goes through",
+     "going",
+     "going about",
+     "going over",
+     "going through",
+     "gone",
+     "gone about",
+     "gone over",
+     "gone through",
+     "to go",
+     "went",
+     "went about",
+     "went over",
+     "went through",
+     "anything goes",
+     "as (someone or something) goes",
+     "as goes",
+     "as someone goes",
+     "as something goes",
+     "be going",
+     "be going to",
+     "come and go",
+     "easy come, easy go",
+     "go a bundle on",
+     "go against",
+     "go ahead",
+     "go all out",
+     "go along",
+     "go ape",
+     "go around",
+     "go round",
+     "go away",
+     "go back",
+     "go before",
+     "go beyond",
+     "go by",
+     "go down",
+     "go easy",
+     "go easy on/with",
+     "go easy on",
+     "go easy with",
+     "go figure",
+     "go in",
+     "go it alone",
+     "go off",
+     "go on",
+     "go out",
+     "go the distance",
+     "go there",
+     "go to",
+     "go together",
+     "go to show/prove",
+     "go to prove",
+     "go to show",
+     "go toward(s)",
+     "go toward",
+     "go towards",
+     "go toward s",
+     "go under",
+     "go up",
+     "go without",
+     "here goes (nothing)",
+     "here goes",
+     "here goes nothing",
+     "here/there you go (again)",
+     "here you go",
+     "here you go again",
+     "there you go",
+     "there you go again",
+     "here/there you go",
+     "here/there you go again",
+     "how goes it?",
+     "ready, set, go",
+     "there go/goes",
+     "there go",
+     "there goes",
+     "who goes there",
+     "where do we go from here",
+     "a long way to go",
+     "go far",
+     "go a long way",
+     "go so far",
+     "gone too far",
+     "go and",
+     "gone his own way",
+     "the way things are going",
+     "that's the way it/life goes",
+     "that's the way it goes",
+     "that's the way life goes",
+     "thats the way it/life goes",
+     "thats the way it goes",
+     "thats the way life goes",
+     "have got to go",
+     "have to go",
+     "good to go",
+     "what she says goes",
+     "going about their business",
+     "enough/plenty to go around",
+     "enough to go around",
+     "plenty to go around",
+     "there's no going back",
+     "theres no going back",
+     "go back a long way",
+     "go way back",
+     "go down in history",
+     "go for it",
+     "could go for",
+     "the same goes for",
+     "have something going for you",
+     "have a lot going for you",
+     "gone into hiding",
+     "went into seclusion",
+     "go into business",
+     "go on to greater things",
+     "to go on",
+     "go on with you",
+     "our thoughts and prayers go out to",
+     "gone out of fashion",
+     "going through your head/mind",
+     "going through your head",
+     "going through your mind",
+     "went through congress/parliament",
+     "went through congress",
+     "went through parliament",
+     "go to sleep",
+     "went to war",
+     "goes to show"
+    ]
+   },
+   "hwi": {
+    "hw": "go",
+    "prs": [
+     {
+      "ipa": "ˈgoʊ",
+      "sound": {
+       "audio": "go000001"
+      }
+     }
+    ]
+   },
+   "fl": "verb",
+   "ins": [
+    {
+     "if": "goes",
+     "prs": [
+      {
+       "ipa": "ˈgoʊz",
+       "sound": {
+        "audio": "go000005"
+       }
+      }
+     ]
+    },
+    {
+     "if": "went",
+     "prs": [
+      {
+       "ipa": "ˈwɛnt",
+       "sound": {
+        "audio": "go000002"
+       }
+      }
+     ]
+    },
+    {
+     "if": "gone",
+     "prs": [
+      {
+       "ipa": "ˈgɑːn",
+       "sound": {
+        "audio": "gone0001"
+       }
+      }
+     ]
+    },
+    {
+     "if": "go*ing",
+     "prs": [
+      {
+       "ipa": "ˈgowɪŋ",
+       "sound": {
+        "audio": "go000004"
+       }
+      }
+     ]
+    }
+   ],
+   "shortdef": [
+    "to move or travel to a place",
+    "to travel to and stay in a place for a particular amount of time",
+    "to move or travel in a particular way or for a particular distance —often used figuratively"
+   ]
+  },
+  {
+   "meta": {
+    "id": "unnoticed",
+    "stems": [
+     "unnoticed",
+     "went"
+    ]
+   },
+   "hwi": {
+    "hw": "un*no*ticed",
+    "prs": [
+     {
+      "ipa": "ˌʌnˈnotəst",
+      "sound": {
+       "audio": "unnot01ld"
+      }
+     }
+    ]
+   },
+   "fl": "adjective",
+   "shortdef": [
+    "not seen or noticed"
+   ]
+  },
+  {
+   "meta": {
+    "id": "air:1",
+    "stems": [
+     "air",
+     "airless",
+     "airlessness",
+     "airlessnesses",
+     "airs",
+     "in the air",
+     "up in the air",
+     "clear the air",
+     "floating on air",
+     "walking on air",
+     "give yourself airs",
+     "put on airs",
+     "hang in the air",
+     "nose in the air",
+     "off the air",
+     "on the air",
+     "on air",
+     "into thin air",
+     "out of thin air",
+     "by air",
+     "airs and graces",
+     "went off the air",
+     "came/went on the air",
+     "came on the air",
+     "went on the air"
+    ]
+   },
+   "hwi": {
+    "hw": "air",
+    "prs": [
+     {
+      "ipa": "ˈeɚ",
+      "sound": {
+       "audio": "air00001"
+      }
+     }
+    ]
+   },
+   "fl": "noun",
+   "ins": [
+    {
+     "il": "plural",
+     "if": "airs"
+    }
+   ],
+   "uros": [
+    {
+     "ure": "air*less",
+     "prs": [
+      {
+       "ipa": "ˈeɚləs",
+       "sound": {
+        "audio": "air00002"
+       }
+      }
+     ],
+     "fl": "adjective",
+     "utxt": [
+      [
+       "vis",
+       [
+        {
+         "t": "a hot, {it}airless{/it} room"
+        }
+       ]
+      ]
+     ]
+    }
+   ],
+   "shortdef": [
+    "the invisible mixture of gases (such as nitrogen and oxygen) that surrounds the Earth and that people and animals breathe",
+    "the space or sky that is filled with air",
+    "methods of travel that involve flying —often used before another noun"
+   ]
+  },
+  {
+   "meta": {
+    "id": "aisle",
+    "stems": [
+     "aisle",
+     "aisles",
+     "go down the aisle",
+     "goes down the aisle",
+     "going down the aisle",
+     "gone down the aisle",
+     "walk down the aisle",
+     "walked down the aisle",
+     "walking down the aisle",
+     "walks down the aisle",
+     "went down the aisle",
+     "on the aisle",
+     "aisle seat",
+     "dancing in the aisles",
+     "rolling in the aisles"
+    ]
+   },
+   "hwi": {
+    "hw": "aisle",
+    "prs": [
+     {
+      "ipa": "ˈajəl",
+      "sound": {
+       "audio": "aisle001"
+      }
+     }
+    ]
+   },
+   "fl": "noun",
+   "ins": [
+    {
+     "il": "plural",
+     "if": "aisles"
+    }
+   ],
+   "shortdef": [
+    "a passage where people walk: such as",
+    "a passage between sections of seats in a church, theater, airplane, etc.",
+    "a passage where people walk through a store, market, etc."
+   ]
+  }
+ ],
+ "learners/analyses": [
+  {
+   "meta": {
+    "id": "analysis",
+    "stems": [
+     "analysis",
+     "analyses",
+     "in the final analysis",
+     "in the last analysis",
+     "defies analysis"
+    ]
+   },
+   "hwi": {
+    "hw": "anal*y*sis",
+    "prs": [
+     {
+      "ipa": "əˈnæləsis",
+      "sound": {
+       "audio": "analys02"
+      }
+     }
+    ]
+   },
+   "fl": "noun",
+   "ins": [
+    {
+     "il": "plural",
+     "ifc": "-y*ses",
+     "if": "anal*y*ses",
+     "prs": [
+      {
+       "ipa": "-əˌsiːz",
+       "sound": {
+        "audio": "analys03"
+       }
+      }
+     ],
+     "altprs": [
+      {
+       "ipa": "əˈnæləˌsiːz"
+      }
+     ]
+    }
+   ],
+   "shortdef": [
+    "a careful study of something to learn about its parts, what they do, and how they are related to each other",
+    "an explanation of the nature and meaning of something",
+    "psychoanalysis"
+   ]
+  },
+  {
+   "meta": {
+    "id": "systems analysis",
+    "stems": [
+     "systems analysis",
+     "systems analyses",
+     "systems analyst",
+     "systems analysts"
+    ]
+   },
+   "hwi": {
+    "hw": "systems analysis"
+   },
+   "fl": "noun",
+   "ins": [
+    {
+     "il": "plural",
+     "ifc": "~ -y*ses",
+     "if": "systems analy*ses"
+    }
+   ],
+   "uros": [
+    {
+     "ure": "systems analyst",
+     "fl": "noun",
+     "ins": [
+      {
+       "il": "plural",
+       "ifc": "~ -lysts",
+       "if": "systems analysts"
+      }
+     ],
+     "gram": "count"
+    }
+   ],
+   "shortdef": [
+    "the process of studying a procedure or business in order to identify its goals and purposes and create systems and procedures that will achieve them in an efficient way"
+   ]
+  }
+ ],
+ "collegiate/civilizations": [
+  {
+   "meta": {
+    "id": "civilization",
+    "stems": [
+     "civilization",
+     "civilizational",
+     "civilizations"
+    ]
+   },
+   "hwi": {
+    "hw": "civ*i*li*za*tion",
+    "prs": [
+     {
+      "mw": "ˌsi-və-lə-ˈzā-shən",
+      "sound": {
+       "audio": "civili05",
+       "ref": "c",
+       "stat": "1"
+      }
+     }
+    ]
+   },
+   "fl": "noun",
+   "uros": [
+    {
+     "ure": "civ*i*li*za*tion*al",
+     "prs": [
+      {
+       "mw": "ˌsi-və-lə-ˈzā-sh(ə-)nəl",
+       "sound": {
+        "audio": "civili06",
+        "ref": "c",
+        "stat": "1"
+       }
+      }
+     ],
+     "fl": "adjective"
+    }
+   ],
+   "shortdef": [
+    "a relatively high level of cultural and technological development; specifically : the stage of cultural development at which writing and the keeping of written records is attained",
+    "the beliefs, customs, arts, etc. characteristic of a particular time or place : culture; also, pluralcivilizations : a well-organized and developed society : culture",
+    "the process of becoming civilized"
+   ]
+  }
+ ],
+ "collegiate/tailoring": [
+  {
+   "meta": {
+    "id": "tailoring:1",
+    "stems": [
+     "tailoring",
+     "tailorings"
+    ]
+   },
+   "hwi": {
+    "hw": "tai*lor*ing",
+    "prs": [
+     {
+      "mw": "ˈtā-lə-riŋ",
+      "sound": {
+       "audio": "tailor04",
+       "ref": "c",
+       "stat": "1"
+      }
+     }
+    ]
+   },
+   "fl": "noun",
+   "shortdef": [
+    "the business or occupation of a tailor",
+    "the work or workmanship of a tailor",
+    "the making or adapting of something to suit a particular purpose"
+   ]
+  },
+  {
+   "meta": {
+    "id": "tailoring:2",
+    "stems": [
+     "tailoring"
+    ]
+   },
+   "hwi": {
+    "hw": "tailoring"
+   },
+   "shortdef": []
+  },
+  {
+   "meta": {
+    "id": "tailor:2",
+    "stems": [
+     "tailor",
+     "tailored",
+     "tailoring",
+     "tailors"
+    ]
+   },
+   "hwi": {
+    "hw": "tailor"
+   },
+   "fl": "verb",
+   "ins": [
+    {
+     "if": "tai*lored"
+    },
+    {
+     "if": "tai*lor*ing"
+    },
+    {
+     "if": "tai*lors"
+    }
+   ],
+   "shortdef": [
+    "to make or fashion as the work of a tailor",
+    "to make or adapt to suit a special need or purpose",
+    "to fit with clothes"
+   ]
+  },
+  {
+   "meta": {
+    "id": "custom-tailor",
+    "stems": [
+     "custom-tailor",
+     "custom-tailored",
+     "custom-tailoring",
+     "custom-tailors"
+    ]
+   },
+   "hwi": {
+    "hw": "cus*tom-tai*lor",
+    "prs": [
+     {
+      "mw": "ˈkə-stəm-ˈtā-lər",
+      "sound": {
+       "audio": "custom11",
+       "ref": "c",
+       "stat": "1"
+      }
+     }
+    ]
+   },
+   "fl": "verb",
+   "ins": [
+    {
+     "if": "cus*tom-tai*lored"
+    },
+    {
+     "if": "cus*tom-tai*lor*ing"
+    },
+    {
+     "if": "cus*tom-tai*lors"
+    }
+   ],
+   "shortdef": [
+    "to alter, plan, or build according to individual specifications or needs"
+   ]
+  }
+ ],
+ "collegiate/running": [
+  {
+   "meta": {
+    "id": "running:1",
+    "stems": [
+     "running",
+     "runnings"
+    ]
+   },
+   "hwi": {
+    "hw": "run*ning",
+    "prs": [
+     {
+      "mw": "ˈrə-niŋ",
+      "sound": {
+       "audio": "runnin01",
+       "ref": "c",
+       "stat": "1"
+      }
+     }
+    ]
+   },
+   "fl": "noun",
+   "shortdef": [
+    "the action of running",
+    "race",
+    "physical condition for running"
+   ]
+  },
+  {
+   "meta": {
+    "id": "running:2",
+    "stems": [
+     "running"
+    ]
+   },
+   "hwi": {
+    "hw": "running"
+   },
+   "fl": "adjective",
+   "shortdef": [
+    "cursive, flowing",
+    "fluid, runny",
+    "incessant, continuous"
+   ]
+  },
+  {
+   "meta": {
+    "id": "running:3",
+    "stems": [
+     "running"
+    ]
+   },
+   "hwi": {
+    "hw": "running"
+   },
+   "fl": "adverb",
+   "shortdef": [
+    "in succession : consecutively"
+   ]
+  },
+  {
+   "meta": {
+    "id": "running:4",
+    "stems": [
+     "running"
+    ]
+   },
+   "hwi": {
+    "hw": "running"
+   },
+   "shortdef": []
+  },
+  {
+   "meta": {
+    "id": "run:1",
+    "stems": [
+     "ran",
+     "run",
+     "running",
+     "runs",
+     "up and running"
+    ]
+   },
+   "hwi": {
+    "hw": "run",
+    "prs": [
+     {
+      "mw": "ˈrən",
+      "sound": {
+       "audio": "run00001",
+       "ref": "c",
+       "stat": "1"
+      }
+     }
+    ]
+   },
+   "fl": "verb",
+   "ins": [
+    {
+     "if": "ran",
+     "prs": [
+      {
+       "mw": "ˈran",
+       "sound": {
+        "audio": "run00002",
+        "ref": "c",
+        "stat": "1"
+       }
+      }
+     ]
+    },
+    {
+     "il": "also chiefly dialectal",
+     "if": "run"
+    },
+    {
+     "if": "run"
+    },
+    {
+     "if": "run*ning"
+    }
+   ],
+   "shortdef": [
+    "to go faster than a walk; specifically : to go steadily by springing steps so that both feet leave the ground for an instant in each step",
+    "to move at a fast gallop",
+    "flee, retreat, escape"
+   ]
+  }
+ ],
+ "collegiate/studies": [
+  {
+   "meta": {
+    "id": "study:1",
+    "stems": [
+     "studies",
+     "study"
+    ]
+   },
+   "hwi": {
+    "hw": "study",
+    "prs": [
+     {
+      "mw": "ˈstə-dē",
+      "sound": {
+       "audio": "study001",
+       "ref": "c",
+       "stat": "1"
+      }
+     }
+    ]
+   },
+   "fl": "noun",
+   "ins": [
+    {
+     "il": "plural",
+     "if": "stud*ies"
+    }
+   ],
+   "shortdef": [
+    "a state of contemplation : reverie",
+    "application of the mental faculties to the acquisition of knowledge",
+    "such application in a particular field or to a specific subject"
+   ]
+  },
+  {
+   "meta": {
+    "id": "study:2",
+    "stems": [
+     "studied",
+     "studier",
+     "studiers",
+     "studies",
+     "study",
+     "studying"
+    ]
+   },
+   "hwi": {
+    "hw": "study"
+   },
+   "fl": "verb",
+   "ins": [
+    {
+     "if": "stud*ied"
+    },
+    {
+     "if": "study*ing"
+    }
+   ],
+   "uros": [
+    {
+     "ure": "studi*er",
+     "prs": [
+      {
+       "mw": "ˈstə-dē-ər",
+       "sound": {
+        "audio": "study002",
+        "ref": "c",
+        "stat": "1"
+       }
+      }
+     ],
+     "fl": "noun"
+    }
+   ],
+   "shortdef": [
+    "to engage in study",
+    "to undertake formal study of a subject",
+    "meditate, reflect"
+   ]
+  },
+  {
+   "meta": {
+    "id": "house of studies",
+    "stems": [
+     "house of studies",
+     "house of study"
+    ]
+   },
+   "hwi": {
+    "hw": "house of studies"
+   },
+   "fl": "noun phrase",
+   "shortdef": [
+    "an educational institution serving scholars of a religious order —called also house of study"
+   ]
+  },
+  {
+   "meta": {
+    "id": "LGBT studies",
+    "stems": [
+     "LGBT studies"
+    ]
+   },
+   "hwi": {
+    "hw": "LGBT studies",
+    "prs": [
+     {
+      "mw": "ˌel-ˌjē-ˌbē-ˌtē-",
+      "sound": {
+       "audio": "lgbt-studies",
+       "ref": "owl",
+       "stat": "1"
+      }
+     }
+    ]
+   },
+   "fl": "noun",
+   "ins": [
+    {
+     "il": "plural in form but singular or plural in construction"
+    }
+   ],
+   "shortdef": [
+    "an academic field of study focusing on matters relating to gender, human sexuality, and sexual orientation with emphasis on LGBT issues and culture —called also queer studies"
+   ]
+  },
+  {
+   "meta": {
+    "id": "queer studies",
+    "stems": [
+     "queer studies"
+    ]
+   },
+   "hwi": {
+    "hw": "queer studies"
+   },
+   "fl": "noun",
+   "ins": [
+    {
+     "il": "plural in form but singular or plural in construction"
+    }
+   ],
+   "shortdef": [
+    "an academic field of study focusing on matters relating to gender, human sexuality, and sexual orientation with emphasis on LGBT issues and culture —called also LGBT studies"
+   ]
+  }
+ ],
+ "collegiate/went": [
+  {
+   "meta": {
+    "id": "went",
+    "stems": [
+     "go",
+     "went"
+    ]
+   },
+   "hwi": {
+    "hw": "went"
+   },
+   "shortdef": []
+  },
+  {
+   "meta": {
+    "id": "go:1",
+    "stems": [
+     "a long way to go",
+     "go",
+     "go a long way",
+     "go anywhere",
+     "go far",
+     "go her own way",
+     "go his own way",
+     "go my own way",
+     "go one's own way",
+     "go our own way",
+     "go their own way",
+     "go too far",
+     "go your own way",
+     "goer",
+     "goers",
+     "goes",
+     "goes a long way",
+     "goes anywhere",
+     "goes her own way",
+     "goes his own way",
+     "goes one's own way",
+     "goes their own way",
+     "goes too far",
+     "going",
+     "going a long way",
+     "going anywhere",
+     "going forward",
+     "going her own way",
+     "going his own way",
+     "going my own way",
+     "going one's own way",
+     "going our own way",
+     "going their own way",
+     "going too far",
+     "going your own way",
+     "gone",
+     "gone a long way",
+     "gone anywhere",
+     "gone her own way",
+     "gone his own way",
+     "gone my own way",
+     "gone one's own way",
+     "gone our own way",
+     "gone their own way",
+     "gone too far",
+     "gone your own way",
+     "there goes",
+     "went",
+     "went a long way",
+     "went anywhere",
+     "went her own way",
+     "went his own way",
+     "went my own way",
+     "went one's own way",
+     "went our own way",
+     "went their own way",
+     "went too far",
+     "went your own way",
+     "where are we going from here",
+     "where did we go from here",
+     "where do we go from here",
+     "where will we go from here"
+    ]
+   },
+   "hwi": {
+    "hw": "go",
+    "prs": [
+     {
+      "mw": "ˈgō",
+      "sound": {
+       "audio": "go000001",
+       "ref": "c",
+       "stat": "1"
+      }
+     }
+    ]
+   },
+   "fl": "verb",
+   "ins": [
+    {
+     "if": "went",
+     "prs": [
+      {
+       "mw": "ˈwent",
+       "sound": {
+        "audio": "go000002",
+        "ref": "c",
+        "stat": "1"
+       }
+      }
+     ]
+    },
+    {
+     "if": "gone",
+     "prs": [
+      {
+       "mw": "ˈgȯn",
+       "sound": {
+        "audio": "go000003",
+        "ref": "c",
+        "stat": "1"
+       }
+      },
+      {
+       "l": "also",
+       "mw": "ˈgän"
+      }
+     ]
+    },
+    {
+     "if": "go*ing",
+     "prs": [
+      {
+       "mw": "ˈgō-iŋ",
+       "sound": {
+        "audio": "go000004",
+        "ref": "c",
+        "stat": "1"
+       }
+      },
+      {
+       "mw": "ˈgȯ(-)iŋ",
+       "pun": ";"
+      },
+      {
+       "l": "\"going to\" in sense 13 is often",
+       "mw": "ˈgō-ə-nə"
+      },
+      {
+       "l": "or",
+       "mw": "ˈgȯ-nə"
+      },
+      {
+       "l": "or",
+       "mw": "ˈgə-nə",
+       "sound": {
+        "audio": "gonna01ld",
+        "ref": "ld",
+        "stat": "1"
+       }
+      }
+     ]
+    },
+    {
+     "if": "goes",
+     "prs": [
+      {
+       "mw": "ˈgōz",
+       "sound": {
+        "audio": "go000005",
+        "ref": "c",
+        "stat": "1"
+       }
+      }
+     ]
+    }
+   ],
+   "uros": [
+    {
+     "ure": "go*er",
+     "prs": [
+      {
+       "mw": "ˈgō-ər",
+       "sound": {
+        "audio": "go000006",
+        "ref": "c",
+        "stat": "1"
+       }
+      }
+     ],
+     "fl": "noun"
+    }
+   ],
+   "shortdef": [
+    "to move or travel in a particular way or direction or for a particular distance —often used figuratively",
+    "to move or travel to a place especially for a particular purpose",
+    "to travel to and stay in a place for a period of time"
+   ]
+  },
+  {
+   "meta": {
+    "id": "ape:3",
+    "stems": [
+     "ape",
+     "go ape",
+     "goes ape",
+     "going ape",
+     "gone ape",
+     "went ape"
+    ]
+   },
+   "hwi": {
+    "hw": "ape"
+   },
+   "fl": "adjective",
+   "shortdef": [
+    "wildly excited or enthusiastic —usually used in the phrase go ape",
+    "showing extreme or uncontrolled anger, aggression, or agitation —usually used in the phrase go ape"
+   ]
+  },
+  {
+   "meta": {
+    "id": "attack:2",
+    "stems": [
+     "attack",
+     "attacks",
+     "go on the attack",
+     "goes on the attack",
+     "going on the attack",
+     "went on the attack"
+    ]
+   },
+   "hwi": {
+    "hw": "attack"
+   },
+   "fl": "noun",
+   "ins": [
+    {
+     "il": "plural",
+     "if": "at*tacks"
+    }
+   ],
+   "shortdef": [
+    "the act of attacking with physical force or unfriendly words : assault",
+    "a belligerent or antagonistic action",
+    "a fit of sickness; especially : an active episode of a chronic or recurrent disease"
+   ]
+  },
+  {
+   "meta": {
+    "id": "bananas:2",
+    "stems": [
+     "bananas",
+     "drive her bananas",
+     "drive him bananas",
+     "drive me bananas",
+     "drive one bananas",
+     "drive them bananas",
+     "drive us bananas",
+     "drive you bananas",
+     "driven her bananas",
+     "driven him bananas",
+     "driven me bananas",
+     "driven one bananas",
+     "driven them bananas",
+     "driven us bananas",
+     "driven you bananas",
+     "drives her bananas",
+     "drives him bananas",
+     "drives me bananas",
+     "drives one bananas",
+     "drives them bananas",
+     "drives us bananas",
+     "drives you bananas",
+     "driving her bananas",
+     "driving him bananas",
+     "driving me bananas",
+     "driving one bananas",
+     "driving them bananas",
+     "driving us bananas",
+     "driving you bananas",
+     "drove her bananas",
+     "drove him bananas",
+     "drove me bananas",
+     "drove one bananas",
+     "drove them bananas",
+     "drove us bananas",
+     "drove you bananas",
+     "go bananas",
+     "goes bananas",
+     "going bananas",
+     "gone bananas",
+     "went bananas"
+    ]
+   },
+   "hwi": {
+    "hw": "ba*nan*as",
+    "prs": [
+     {
+      "mw": "bə-ˈna-nəz",
+      "sound": {
+       "audio": "banana02",
+       "ref": "c",
+       "stat": "1"
+      }
+     },
+     {
+      "l": "especially British",
+      "mw": "-ˈnä-"
+     }
+    ]
+   },
+   "fl": "adjective",
+   "shortdef": [
+    "mentally unsound —usually used informally in an exaggerated way",
+    "very excited and wild"
+   ]
+  }
+ ],
+ "collegiate/analyses": [
+  {
+   "meta": {
+    "id": "analysis",
+    "stems": [
+     "analyses",
+     "analysis"
+    ]
+   },
+   "hwi": {
+    "hw": "anal*y*sis",
+    "prs": [
+     {
+      "mw": "ə-ˈna-lə-səs",
+      "sound": {
+       "audio": "analys02",
+       "ref": "c",
+       "stat": "1"
+      }
+     }
+    ]
+   },
+   "fl": "noun",
+   "ins": [
+    {
+     "il": "plural",
+     "ifc": "-y*ses",
+     "if": "anal*y*ses",
+     "prs": [
+      {
+       "mw": "ə-ˈna-lə-ˌsēz",
+       "sound": {
+        "audio": "analys03",
+        "ref": "c",
+        "stat": "1"
+       }
+      }
+     ]
+    }
+   ],
+   "shortdef": [
+    "a detailed examination of anything complex in order to understand its nature or to determine its essential features : a thorough study",
+    "a statement, usually in writing, explaining the results of such an examination",
+    "separation of a whole into its component parts"
+   ]
+  },
+  {
+   "meta": {
+    "id": "analyse",
+    "stems": [
+     "analyse",
+     "analysed",
+     "analyses",
+     "analysing",
+     "analyze"
+    ]
+   },
+   "hwi": {
+    "hw": "an*a*lyse"
+   },
+   "shortdef": []
+  },
+  {
+   "meta": {
+    "id": "activation analysis",
+    "stems": [
+     "activation analyses",
+     "activation analysis"
+    ]
+   },
+   "hwi": {
+    "hw": "activation analysis"
+   },
+   "fl": "noun",
+   "shortdef": [
+    "an analytical method used to determine the chemical elements comprising a material by bombarding it with particles (such as neutrons or gamma rays) to produce radioactive atoms whose emissions are indicative of the elements present"
+   ]
+  },
+  {
+   "meta": {
+    "id": "cluster analysis",
+    "stems": [
+     "cluster analyses",
+     "cluster analysis"
+    ]
+   },
+   "hwi": {
+    "hw": "cluster analysis"
+   },
+   "fl": "noun",
+   "shortdef": [
+    "a statistical classification technique for discovering whether the individuals of a population fall into different groups by making quantitative comparisons of multiple characteristics"
+   ]
+  },
+  {
+   "meta": {
+    "id": "content analysis",
+    "stems": [
+     "content analyses",
+     "content analysis"
+    ]
+   },
+   "hwi": {
+    "hw": "content analysis"
+   },
+   "fl": "noun",
+   "shortdef": [
+    "analysis of the manifest and latent content of a body of communicated material (such as a book or film) through a classification, tabulation, and evaluation of its key symbols and themes in order to ascertain its meaning and probable effect"
+   ]
+  }
+ ]
+}

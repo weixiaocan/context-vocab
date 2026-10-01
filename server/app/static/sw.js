@@ -1,4 +1,4 @@
-const CACHE_NAME = "vocab-pwa-v1";
+const CACHE_NAME = "vocab-pwa-v2";
 const REVIEW_PAGE = "/review";
 
 self.addEventListener("install", event => {
@@ -30,8 +30,11 @@ self.addEventListener("fetch", event => {
     event.respondWith(
       fetch(request)
         .then(response => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(REVIEW_PAGE, copy));
+          // Don't let the login page (redirected) or an error replace the cached review page.
+          if (response.ok && !response.redirected) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(REVIEW_PAGE, copy));
+          }
           return response;
         })
         .catch(() => caches.match(REVIEW_PAGE).then(cached => cached || caches.match(request)))
@@ -49,8 +52,12 @@ self.addEventListener("fetch", event => {
         cached =>
           cached ||
           fetch(request).then(response => {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+            // Only cache successful responses: a 401 (expired login) or 404
+            // (no audio yet) must not stick and silence the word forever.
+            if (response.ok && response.status === 200) {
+              const copy = response.clone();
+              caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+            }
             return response;
           })
       )

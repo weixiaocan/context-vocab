@@ -33,5 +33,8 @@ def lookup_word(
         "definitions": entry.definitions,
         "phonetic": entry.phonetic or "",
         "audioUrl": entry.audio_url or "",
+        "baseWord": entry.base_word or "",
+        "basePhonetic": entry.base_phonetic or "",
+        "baseAudioUrl": entry.base_audio_url or "",
         "collected": collected,
     }

@@ -72,6 +72,9 @@ def explain_selection(payload: ExplainRequest, request: Request) -> dict[str, ob
         "definitions": entry.definitions if entry else [],
         "phonetic": (entry.phonetic or "") if entry else "",
         "audioUrl": (entry.audio_url or "") if entry else "",
+        "baseWord": (entry.base_word or "") if entry else "",
+        "basePhonetic": (entry.base_phonetic or "") if entry else "",
+        "baseAudioUrl": (entry.base_audio_url or "") if entry else "",
         "collected": collected,
     }
 
@@ -91,7 +94,11 @@ def _dictionary_entry(conn, request: Request, term: str) -> DictEntry | None:
     if " " in term:
         return None
     row = conn.execute(
-        "SELECT definitions, part_of_speech, phonetic, audio_url FROM words WHERE word = ?",
+        """
+        SELECT definitions, part_of_speech, phonetic, audio_url,
+               base_word, base_phonetic, base_audio_url
+        FROM words WHERE word = ?
+        """,
         (term,),
     ).fetchone()
     if row and any((row["definitions"], row["part_of_speech"], row["phonetic"], row["audio_url"])):
@@ -100,6 +107,9 @@ def _dictionary_entry(conn, request: Request, term: str) -> DictEntry | None:
             part_of_speech=row["part_of_speech"],
             phonetic=row["phonetic"],
             audio_url=row["audio_url"],
+            base_word=row["base_word"],
+            base_phonetic=row["base_phonetic"],
+            base_audio_url=row["base_audio_url"],
         )
     settings = request.app.state.settings
     cache_key = (str(getattr(settings, "dictionary_source", "")), term)

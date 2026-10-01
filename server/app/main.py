@@ -13,7 +13,7 @@ from app.api import collect, dictionary, explain, review
 from app.auth import COOKIE_NAME, valid_access_token
 from app.config import load_settings
 from app.db import connect, init_db
-from app.redact import configure_logging
+from app.redact import configure_logging, redact
 from app.scheduler import start_scheduler
 from app.services.audio_cache import get_audio_file
 
@@ -97,8 +97,9 @@ def create_app() -> FastAPI:
     @app.get("/audio/{word}.mp3")
     def audio(word: str) -> FileResponse:
         try:
-            path = get_audio_file(word, settings)
-        except Exception:
+            path = get_audio_file(word, settings, app.state.db)
+        except Exception as exc:
+            logging.getLogger(__name__).warning("audio fetch failed for %r: %s", word, redact(exc))
             path = None
         if not path:
             return JSONResponse({"detail": "audio not found"}, status_code=404)

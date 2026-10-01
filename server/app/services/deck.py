@@ -61,9 +61,10 @@ def collect_word(
             """
             INSERT INTO words (
                 word, definitions, part_of_speech, phonetic, audio_url,
+                base_word, base_phonetic, base_audio_url,
                 remaining, review_interval, due_date, status
             )
-            VALUES (?, ?, ?, ?, ?, ?, 0, ?, 'pending')
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 'pending')
             """,
             (
                 normalized,
@@ -71,6 +72,9 @@ def collect_word(
                 dictionary_entry.part_of_speech if dictionary_entry else None,
                 dictionary_entry.phonetic if dictionary_entry else None,
                 dictionary_entry.audio_url if dictionary_entry else None,
+                dictionary_entry.base_word if dictionary_entry else None,
+                dictionary_entry.base_phonetic if dictionary_entry else None,
+                dictionary_entry.base_audio_url if dictionary_entry else None,
                 settings.graduate_after,
                 today_key,
             ),
@@ -101,7 +105,11 @@ def _save_dictionary_entry(conn: sqlite3.Connection, word: str, entry: DictEntry
     if not entry:
         return
     row = conn.execute(
-        "SELECT definitions, part_of_speech, phonetic, audio_url FROM words WHERE word = ?",
+        """
+        SELECT definitions, part_of_speech, phonetic, audio_url,
+               base_word, base_phonetic, base_audio_url
+        FROM words WHERE word = ?
+        """,
         (word,),
     ).fetchone()
     if not row:
@@ -114,6 +122,9 @@ def _save_dictionary_entry(conn: sqlite3.Connection, word: str, entry: DictEntry
             part_of_speech = ?,
             phonetic = ?,
             audio_url = ?,
+            base_word = ?,
+            base_phonetic = ?,
+            base_audio_url = ?,
             updated_at = CURRENT_TIMESTAMP
         WHERE word = ?
         """,
@@ -122,6 +133,9 @@ def _save_dictionary_entry(conn: sqlite3.Connection, word: str, entry: DictEntry
             entry.part_of_speech or row["part_of_speech"],
             entry.phonetic or row["phonetic"],
             entry.audio_url or row["audio_url"],
+            entry.base_word or row["base_word"],
+            entry.base_phonetic or row["base_phonetic"],
+            entry.base_audio_url or row["base_audio_url"],
             word,
         ),
     )
@@ -310,6 +324,7 @@ def _load_daily_deck(conn: sqlite3.Connection, day_key: str) -> list[dict[str, A
         """
         SELECT d.date, d.word, d.sentence_id, d.is_new, d.answered, d.correct,
                w.part_of_speech, w.definitions, w.phonetic, w.audio_url,
+               w.base_word, w.base_phonetic, w.base_audio_url,
                w.remaining, w.review_interval, w.due_date, w.status,
                s.sentence, s.answer_zh, s.definition_zh, s.trans_zh
         FROM daily_deck d
@@ -335,6 +350,9 @@ def _card_from_row(row: sqlite3.Row) -> dict[str, Any]:
         "definitions": json.loads(row["definitions"] or "[]"),
         "phonetic": row["phonetic"],
         "audio_url": row["audio_url"],
+        "base_word": row["base_word"],
+        "base_phonetic": row["base_phonetic"],
+        "base_audio_url": row["base_audio_url"],
         "remaining": row["remaining"],
         "review_interval": row["review_interval"],
         "due_date": row["due_date"],

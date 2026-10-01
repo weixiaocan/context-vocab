@@ -6,7 +6,8 @@
     escapeHtml,
     sentenceTranslation,
     collectButtonView,
-    initialCollectStatus
+    initialCollectStatus,
+    pronunciationView
   } = window.VocabCardCore;
   let popup = null;
   let lastSelection = null;
@@ -83,9 +84,22 @@
       popup.innerHTML = popupHtml(word, `<div class="vocab-card-muted">查不到</div>`);
     } else {
       const entry = state.entry;
-      const audioButton = `<button class="vocab-card-audio" type="button" data-action="play" aria-label="播放 ${escapeHtml(word)} 的发音" title="${entry.audioUrl ? "音频加载中" : "使用浏览器语音播放"}" ${entry.audioUrl ? "disabled" : ""}>🔊</button>`;
-      popup.innerHTML = popupHtml(word, entryBodyHtml(entry), audioButton);
-      bindAudio(word, entry);
+      const pron = pronunciationView(entry, word);
+      const audioButton = audioButtonHtml("play", pron.speakText, true);
+      popup.innerHTML = popupHtml(word, entryBodyHtml(entry, pron), audioButton);
+      // Exact MW recording -> server /audio proxy (MW/Youdao) -> Youdao direct -> TTS.
+      bindAudio(
+        popup.querySelector('[data-action="play"]'),
+        pron.speakText,
+        window.VocabCardApi.audioCandidates(pron.audioUrl, pron.speakText)
+      );
+      if (pron.base) {
+        bindAudio(
+          popup.querySelector('[data-action="play-base"]'),
+          pron.base.speakText,
+          Promise.resolve(pron.base.audioUrl ? [pron.base.audioUrl] : [])
+        );
+      }
       setCollectStatus(initialCollectStatus(entry));
       popup.querySelector('[data-action="collect"]')?.addEventListener("click", collectCurrentWord);
     }
@@ -95,10 +109,21 @@
     popup.style.visibility = "visible";
   }
 
-  function entryBodyHtml(entry) {
+  function audioButtonHtml(action, speakText, audioUrl, extraClass = "") {
+    const label = action === "play-base" ? `播放词条 ${speakText} 的发音` : `播放 ${speakText} 的发音`;
+    return `<button class="vocab-card-audio${extraClass}" type="button" data-action="${action}" aria-label="${escapeHtml(label)}" title="${audioUrl ? "音频加载中" : "使用浏览器语音播放"}" ${audioUrl ? "disabled" : ""}>🔊</button>`;
+  }
+
+  function entryBodyHtml(entry, pron = pronunciationView(entry, entry?.word)) {
     const metaParts = [];
-    if (entry.phonetic) metaParts.push(`<span class="vocab-card-phonetic" lang="en">${escapeHtml(entry.phonetic)}</span>`);
+    if (pron.phonetic) metaParts.push(`<span class="vocab-card-phonetic" lang="en">${escapeHtml(pron.phonetic)}</span>`);
     if (entry.partOfSpeech) metaParts.push(`<span class="vocab-card-pos" lang="en">${escapeHtml(entry.partOfSpeech)}</span>`);
+    if (pron.base) {
+      const basePhonetic = pron.base.phonetic
+        ? `<span class="vocab-card-phonetic" lang="en">${escapeHtml(pron.base.phonetic)}</span>`
+        : "";
+      metaParts.push(`<span class="vocab-card-base"><span lang="zh-CN">词条</span> <b lang="en">${escapeHtml(pron.base.word)}</b>${basePhonetic}${audioButtonHtml("play-base", pron.base.speakText, pron.base.audioUrl, " vocab-card-audio-mini")}</span>`);
+    }
     const meta = metaParts.length ? `<div class="vocab-card-meta">${metaParts.join("")}</div>` : "";
 
     const definitions = (entry.definitions || []).filter(Boolean);
@@ -164,51 +189,90 @@
     }
   }
 
-  function bindAudio(word, entry) {
-    const playButton = popup.querySelector('[data-action="play"]');
-    if (!playButton) return;
-    if (!entry.audioUrl) {
-      playButton.addEventListener("click", event => {
-        event.stopPropagation();
-        const utterance = new SpeechSynthesisUtterance(word);
-        utterance.lang = "en-US";
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utterance);
-      });
-      return;
-    }
+  function speakWord(text) {
+    if (!("speechSynthesis" in window)) return false;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.rate = 0.9;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+    return true;
+  }
 
+  // Plays the first audio source that loads (urlsPromise resolves to an
+  // ordered list); otherwise, or when playback fails, falls back to browser TTS
+  // of the same text so the button is never silent.
+  const AUDIO_READY_WAIT_MS = 2500;
+
+  function bindAudio(playButton, speakText, urlsPromise) {
+    if (!playButton) return;
+    const ownerPopup = popup;
     let audioContext = null;
     let audioBuffer = null;
-    window.VocabCardApi.loadAudio(entry.audioUrl).then(async audioData => {
+    let useTts = false;
+
+    const setStatus = text => {
+      const status = ownerPopup?.querySelector(".vocab-card-status");
+      if (status) status.textContent = text;
+    };
+    const enable = title => {
+      playButton.disabled = false;
+      playButton.title = title;
+    };
+    const fallbackToTts = (error, message) => {
+      useTts = true;
+      enable("使用浏览器语音播放");
+      if (error) console.warn(message, error);
+    };
+    // Don't keep the button disabled if the sources are slow; a click before
+    // the audio is ready simply uses TTS.
+    const readyTimer = window.setTimeout(() => enable("使用浏览器语音播放"), AUDIO_READY_WAIT_MS);
+
+    const decode = async audioData => {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (!AudioContext) throw new Error("Web Audio API is unavailable");
-      audioContext = new AudioContext();
-      audioBuffer = await audioContext.decodeAudioData(audioData);
-      playButton.disabled = false;
-      playButton.title = "播放发音";
+      audioContext = audioContext || new AudioContext();
+      return audioContext.decodeAudioData(audioData);
+    };
+
+    Promise.resolve(urlsPromise).then(async urls => {
+      let lastError = null;
+      for (const url of urls || []) {
+        try {
+          audioBuffer = await decode(await window.VocabCardApi.loadAudio(url));
+          window.clearTimeout(readyTimer);
+          enable("播放发音");
+          return;
+        } catch (error) {
+          lastError = error;
+          if (isInvalidExtensionContext(error)) {
+            setStatus("插件已更新，请刷新页面");
+            break;
+          }
+        }
+      }
+      window.clearTimeout(readyTimer);
+      fallbackToTts(lastError, "Vocab Card audio loading failed, using TTS");
     }).catch(error => {
-      playButton.title = "音频加载失败";
-      const status = popup?.querySelector(".vocab-card-status");
-      if (status) status.textContent = isInvalidExtensionContext(error)
-        ? "插件已更新，请刷新页面"
-        : "发音加载失败";
-      console.warn("Vocab Card audio loading failed", error);
+      window.clearTimeout(readyTimer);
+      fallbackToTts(error, "Vocab Card audio loading failed, using TTS");
     });
+
     playButton.addEventListener("click", event => {
       event.stopPropagation();
-      if (!audioContext || !audioBuffer) return;
+      if (useTts || !audioContext || !audioBuffer) {
+        if (!speakWord(speakText)) setStatus("浏览器不支持语音朗读");
+        return;
+      }
       audioContext.resume().then(() => {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffer;
         source.connect(audioContext.destination);
         source.start(0);
-        const status = popup?.querySelector(".vocab-card-status");
-        if (status) status.textContent = "";
+        setStatus("");
       }).catch(error => {
-        const status = popup?.querySelector(".vocab-card-status");
-        if (status) status.textContent = "发音播放失败";
-        console.warn("Vocab Card audio playback failed", error);
+        fallbackToTts(error, "Vocab Card audio playback failed, using TTS");
+        speakWord(speakText);
       });
     });
   }

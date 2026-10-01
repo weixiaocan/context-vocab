@@ -69,7 +69,8 @@ def _ensure_dictionary_fields(conn: sqlite3.Connection, settings: Settings, word
     conn.execute(
         """
         UPDATE words
-        SET definitions = ?, part_of_speech = ?, phonetic = ?, audio_url = ?, updated_at = CURRENT_TIMESTAMP
+        SET definitions = ?, part_of_speech = ?, phonetic = ?, audio_url = ?,
+            base_word = ?, base_phonetic = ?, base_audio_url = ?, updated_at = CURRENT_TIMESTAMP
         WHERE word = ?
         """,
         (
@@ -77,6 +78,9 @@ def _ensure_dictionary_fields(conn: sqlite3.Connection, settings: Settings, word
             entry.part_of_speech,
             entry.phonetic,
             entry.audio_url,
+            entry.base_word,
+            entry.base_phonetic,
+            entry.base_audio_url,
             word,
         ),
     )

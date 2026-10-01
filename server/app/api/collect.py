@@ -28,6 +28,9 @@ def collect_word(payload: CollectWordRequest, request: Request, background_tasks
             part_of_speech=payload.part_of_speech,
             phonetic=payload.phonetic,
             audio_url=payload.audio_url,
+            base_word=payload.base_word,
+            base_phonetic=payload.base_phonetic,
+            base_audio_url=payload.base_audio_url,
         ),
         enriched_sentence,
     )

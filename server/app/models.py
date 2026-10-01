@@ -13,6 +13,9 @@ class CollectWordRequest(BaseModel):
     part_of_speech: str | None = Field(default=None, max_length=80)
     phonetic: str | None = Field(default=None, max_length=200)
     audio_url: str | None = Field(default=None, max_length=2000)
+    base_word: str | None = Field(default=None, max_length=80)
+    base_phonetic: str | None = Field(default=None, max_length=200)
+    base_audio_url: str | None = Field(default=None, max_length=2000)
     answer_zh: str | None = Field(default=None, max_length=500)
     definition_zh: str | None = Field(default=None, max_length=2000)
     trans_zh: str | None = Field(default=None, max_length=4000)
@@ -43,6 +46,12 @@ class DictEntry:
     part_of_speech: str | None = None
     phonetic: str | None = None
     audio_url: str | None = None
+    # Set only when the definitions belong to a different headword than the
+    # looked-up form (e.g. "tailoring" -> "tailor"). Kept separate so the UI can
+    # label it instead of silently playing the base word.
+    base_word: str | None = None
+    base_phonetic: str | None = None
+    base_audio_url: str | None = None
 
 
 @dataclass(frozen=True)

@@ -63,6 +63,24 @@
   font-family: "Segoe UI", "Lucida Sans Unicode", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
 }
 
+.vocab-card-base {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #667085;
+  font-size: 12px;
+}
+
+.vocab-card-base b {
+  color: #344054;
+  font-weight: 600;
+}
+
+.vocab-card-popup .vocab-card-audio.vocab-card-audio-mini {
+  padding: 0 2px;
+  font-size: 13px;
+}
+
 .vocab-card-pos {
   padding: 0 6px;
   border-radius: 4px;

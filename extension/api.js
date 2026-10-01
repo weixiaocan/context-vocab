@@ -86,6 +86,9 @@
         part_of_speech: dictionaryEntry?.partOfSpeech || null,
         phonetic: dictionaryEntry?.phonetic || null,
         audio_url: dictionaryEntry?.audioUrl || null,
+        base_word: dictionaryEntry?.baseWord || null,
+        base_phonetic: dictionaryEntry?.basePhonetic || null,
+        base_audio_url: dictionaryEntry?.baseAudioUrl || null,
         answer_zh: dictionaryEntry?.answer_zh || null,
         definition_zh: dictionaryEntry?.definition_zh || dictionaryEntry?.answer_zh || null,
         trans_zh: dictionaryEntry?.trans_zh || null
@@ -106,5 +109,16 @@
     return bytes.buffer;
   }
 
-  window.VocabCardApi = {lookupWord, collectWord, loadAudio};
+  // Ordered audio URLs for the selected word (exact MW -> server proxy -> Youdao).
+  async function audioCandidates(audioUrl, word) {
+    let serverUrl = "";
+    try {
+      serverUrl = (await getServerConfig()).serverUrl;
+    } catch (error) {
+      // Extension context gone; Youdao/TTS still work.
+    }
+    return window.VocabCardCore.audioCandidates(audioUrl, word, serverUrl);
+  }
+
+  window.VocabCardApi = {lookupWord, collectWord, loadAudio, audioCandidates};
 })();
