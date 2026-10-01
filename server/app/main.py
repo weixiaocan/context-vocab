@@ -13,10 +13,11 @@ from app.api import collect, dictionary, explain, review
 from app.auth import COOKIE_NAME, valid_access_token
 from app.config import load_settings
 from app.db import connect, init_db
+from app.redact import configure_logging
 from app.scheduler import start_scheduler
 from app.services.audio_cache import get_audio_file
 
-logging.basicConfig(level=logging.INFO)
+configure_logging(logging.INFO)
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
@@ -150,6 +151,8 @@ def create_app() -> FastAPI:
 
     @app.on_event("startup")
     def on_startup() -> None:
+        # uvicorn installs its handlers after import; make sure they redact too.
+        configure_logging(logging.INFO)
         app.state.scheduler = start_scheduler(settings)
 
     @app.on_event("shutdown")

@@ -2,7 +2,23 @@ import httpx
 import pytest
 
 from app.config import Settings
+from app.services import translation
 from app.services.translation import TranslationError, translate_to_chinese
+
+
+@pytest.fixture(autouse=True)
+def fake_clock(monkeypatch):
+    """Replace the throttle clock/sleep so tests never really sleep."""
+    clock = {"now": 1000.0, "sleeps": []}
+
+    def fake_sleep(seconds):
+        clock["sleeps"].append(seconds)
+        clock["now"] += seconds
+
+    monkeypatch.setattr(translation, "_sleep", fake_sleep)
+    monkeypatch.setattr(translation, "_monotonic", lambda: clock["now"])
+    monkeypatch.setattr(translation, "_baidu_last_request", 0.0)
+    return clock
 
 
 def settings(
@@ -127,3 +143,70 @@ def test_translate_requires_tencent_api_key_when_selected():
 def test_translate_without_any_credentials_reports_configuration_error():
     with pytest.raises(TranslationError, match="no translation credentials"):
         translate_to_chinese(settings(), "tractable")
+
+
+def _baidu_settings():
+    return settings(provider="baidu", baidu_app_id="appid", baidu_secret="secret")
+
+
+def test_baidu_rate_limit_54003_is_retried(fake_clock):
+    responses = [
+        {"error_code": "54003", "error_msg": "Invalid Access Limit"},
+        {"trans_result": [{"src": "guardrails", "dst": "\u62a4\u680f"}]},
+    ]
+    calls = []
+
+    def requester(url, **kwargs):
+        calls.append(kwargs["params"]["q"])
+        return httpx.Response(200, json=responses.pop(0), request=httpx.Request("GET", url))
+
+    result = translate_to_chinese(_baidu_settings(), "guardrails", requester=requester)
+
+    assert result == "\u62a4\u680f"
+    assert calls == ["guardrails", "guardrails"]
+    assert fake_clock["sleeps"] == [pytest.approx(1.1)]
+
+
+def test_baidu_rate_limit_gives_up_after_two_retries(fake_clock):
+    calls = []
+
+    def requester(url, **kwargs):
+        calls.append(1)
+        return httpx.Response(
+            200,
+            json={"error_code": 54003, "error_msg": "Invalid Access Limit"},
+            request=httpx.Request("GET", url),
+        )
+
+    with pytest.raises(TranslationError, match="54003"):
+        translate_to_chinese(_baidu_settings(), "guardrails", requester=requester)
+    assert len(calls) == 3
+    assert len(fake_clock["sleeps"]) == 2
+
+
+def test_baidu_calls_are_throttled(fake_clock):
+    def requester(url, **kwargs):
+        return httpx.Response(
+            200,
+            json={"trans_result": [{"src": "a", "dst": "b"}]},
+            request=httpx.Request("GET", url),
+        )
+
+    translate_to_chinese(_baidu_settings(), "first", requester=requester)
+    fake_clock["now"] += 0.3
+    translate_to_chinese(_baidu_settings(), "second", requester=requester)
+
+    assert fake_clock["sleeps"] == [pytest.approx(0.8)]
+    assert translation._BAIDU_MIN_INTERVAL >= 1.05
+
+
+def test_baidu_http_error_message_is_redacted():
+    def requester(url, **kwargs):
+        request = httpx.Request("GET", url, params=kwargs["params"])
+        return httpx.Response(500, request=request)
+
+    with pytest.raises(TranslationError) as info:
+        translate_to_chinese(_baidu_settings(), "guardrails", requester=requester)
+    message = str(info.value)
+    assert "sign=***" in message
+    assert "appid=***" in message

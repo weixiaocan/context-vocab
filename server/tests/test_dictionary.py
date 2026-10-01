@@ -1,3 +1,8 @@
+import httpx
+import pytest
+
+from app.services import dictionary
+from app.services.dictionary import DictionaryLookupError
 from app.services.dictionary import parse_dictionaryapi_dev, parse_merriam_webster
 
 
@@ -103,3 +108,32 @@ def test_parse_merriam_webster_uses_alternate_pronunciation_without_audio():
     assert entry is not None
     assert entry.phonetic == "ˈworənt"
     assert entry.audio_url is None
+
+
+MW_URL = "https://www.dictionaryapi.com/api/v3/references/collegiate/json/guardrails"
+
+
+def test_merriam_webster_http_error_does_not_leak_key(monkeypatch):
+    def fake_get(url, params=None, timeout=None):
+        request = httpx.Request("GET", url, params=params)
+        return httpx.Response(403, request=request, text="forbidden")
+
+    monkeypatch.setattr(dictionary.httpx, "get", fake_get)
+    with pytest.raises(DictionaryLookupError) as info:
+        dictionary._lookup_merriam_webster(MW_URL, "SUPERSECRET123", 1.0)
+
+    assert "SUPERSECRET123" not in str(info.value)
+    assert "403" in str(info.value)
+    assert info.value.__cause__ is None
+    assert info.value.__suppress_context__ is True
+
+
+def test_merriam_webster_transport_error_does_not_leak_key(monkeypatch):
+    def fake_get(url, params=None, timeout=None):
+        raise httpx.ConnectError(f"cannot reach {url}?key={params['key']}")
+
+    monkeypatch.setattr(dictionary.httpx, "get", fake_get)
+    with pytest.raises(DictionaryLookupError) as info:
+        dictionary._lookup_merriam_webster(MW_URL, "SUPERSECRET123", 1.0)
+
+    assert "SUPERSECRET123" not in str(info.value)

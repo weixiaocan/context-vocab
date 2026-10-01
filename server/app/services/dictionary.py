@@ -6,6 +6,7 @@ import httpx
 
 from app.config import Settings
 from app.models import DictEntry
+from app.redact import redact
 
 
 class DictionaryLookupError(RuntimeError):
@@ -51,12 +52,23 @@ def lookup_merriam_webster_collegiate(word: str, settings: Settings, timeout: fl
 
 
 def _lookup_merriam_webster(url: str, api_key: str, timeout: float) -> DictEntry | None:
+    # Never let the request URL (which carries ?key=) into messages or chained
+    # tracebacks: build our own message and suppress the original exception.
     try:
         response = httpx.get(url, params={"key": api_key}, timeout=timeout)
+        response.raise_for_status()
+        payload = response.json()
+    except httpx.HTTPStatusError as exc:
+        raise DictionaryLookupError(
+            f"Merriam-Webster request failed: HTTP {exc.response.status_code}"
+        ) from None
     except httpx.HTTPError as exc:
-        raise DictionaryLookupError(str(exc)) from exc
-    response.raise_for_status()
-    payload = response.json()
+        message = redact(str(exc)).replace(api_key, "***")
+        raise DictionaryLookupError(
+            f"Merriam-Webster request failed: {type(exc).__name__}: {message}"
+        ) from None
+    except ValueError:
+        raise DictionaryLookupError("Merriam-Webster returned invalid JSON") from None
     if not isinstance(payload, list) or not payload or isinstance(payload[0], str):
         return None
     return parse_merriam_webster(payload)

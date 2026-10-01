@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Query, Request
 
+from app.redact import redact
 from app.services import dictionary
 
 router = APIRouter()
@@ -17,7 +18,7 @@ def lookup_word(
     try:
         entry = dictionary.lookup(normalized_word, settings=request.app.state.settings)
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        raise HTTPException(status_code=502, detail=redact(exc)) from None
     if entry is None:
         raise HTTPException(status_code=404, detail="word not found")
     collected = False

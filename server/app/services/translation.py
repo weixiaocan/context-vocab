@@ -10,6 +10,7 @@ from typing import Any
 import httpx
 
 from app.config import Settings
+from app.redact import redact
 
 
 class TranslationError(RuntimeError):
@@ -21,6 +22,18 @@ class TranslationError(RuntimeError):
 _baidu_lock = threading.Lock()
 _baidu_last_request = 0.0
 _BAIDU_MIN_INTERVAL = 1.1
+# 54003 = "Invalid Access Limit" (QPS exceeded): back off and retry.
+_BAIDU_RATE_LIMIT_CODE = "54003"
+_BAIDU_RATE_LIMIT_RETRIES = 2
+_BAIDU_RETRY_DELAY = 1.1
+
+
+def _sleep(seconds: float) -> None:
+    time.sleep(seconds)
+
+
+def _monotonic() -> float:
+    return time.monotonic()
 
 
 def translate_to_chinese(
@@ -88,21 +101,38 @@ def _translate_baidu(
         "sign": sign,
     }
 
+    data: Any = None
+    for attempt in range(_BAIDU_RATE_LIMIT_RETRIES + 1):
+        data = _baidu_request(settings.baidu_base_url, params, timeout, requester)
+        if _is_baidu_rate_limited(data) and attempt < _BAIDU_RATE_LIMIT_RETRIES:
+            _sleep(_BAIDU_RETRY_DELAY)
+            continue
+        break
+    return _parse_baidu(data)
+
+
+def _is_baidu_rate_limited(data: Any) -> bool:
+    return isinstance(data, dict) and str(data.get("error_code", "")) == _BAIDU_RATE_LIMIT_CODE
+
+
+def _baidu_request(
+    url: str,
+    params: dict[str, str],
+    timeout: float,
+    requester: Callable[..., httpx.Response],
+) -> Any:
     global _baidu_last_request
     with _baidu_lock:
-        wait_until = _baidu_last_request + _BAIDU_MIN_INTERVAL
-        remaining = wait_until - time.monotonic()
+        remaining = _baidu_last_request + _BAIDU_MIN_INTERVAL - _monotonic()
         if remaining > 0:
-            time.sleep(remaining)
-        _baidu_last_request = time.monotonic()
+            _sleep(remaining)
+        _baidu_last_request = _monotonic()
         try:
-            response = requester(settings.baidu_base_url, params=params, timeout=timeout)
+            response = requester(url, params=params, timeout=timeout)
             response.raise_for_status()
-            data = response.json()
+            return response.json()
         except (httpx.HTTPError, ValueError) as exc:
-            raise TranslationError(str(exc)) from exc
-
-    return _parse_baidu(data)
+            raise TranslationError(redact(exc)) from None
 
 
 def _parse_baidu(data: dict[str, Any]) -> str:
@@ -160,7 +190,7 @@ def _translate_tencent(
         response.raise_for_status()
         data = response.json()
     except (httpx.HTTPError, ValueError) as exc:
-        raise TranslationError(str(exc)) from exc
+        raise TranslationError(redact(exc)) from None
 
     try:
         translated = str(data["choices"][0]["message"]["content"]).strip()
