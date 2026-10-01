@@ -88,3 +88,39 @@ test("calculatePopupPosition clamps both horizontal edges", () => {
   assert.equal(right.left, 668);
   assert.equal(left.left, 12);
 });
+
+const {
+  escapeHtml,
+  sentenceTranslation,
+  collectButtonView,
+  initialCollectStatus
+} = require("../core.js");
+
+test("escapeHtml escapes markup characters and tolerates empty values", () => {
+  assert.equal(escapeHtml(`<img src=x onerror="a('b')">&`), "&lt;img src=x onerror=&quot;a(&#039;b&#039;)&quot;&gt;&amp;");
+  assert.equal(escapeHtml(undefined), "");
+  assert.equal(escapeHtml(null), "");
+  assert.equal(escapeHtml(0), "0");
+});
+
+test("sentenceTranslation returns compact trans_zh unless it repeats the word meaning", () => {
+  assert.equal(sentenceTranslation({answer_zh: "冗长的", trans_zh: "  指令\n更冗长。 "}), "指令 更冗长。");
+  assert.equal(sentenceTranslation({answer_zh: "冗长的", trans_zh: "冗长的"}), "");
+  assert.equal(sentenceTranslation({answer_zh: "冗长的"}), "");
+  assert.equal(sentenceTranslation(null), "");
+});
+
+test("collectButtonView maps every collect status to a label and disabled flag", () => {
+  assert.deepEqual(collectButtonView("idle"), {label: "加入生词本", disabled: false, tone: "primary"});
+  assert.deepEqual(collectButtonView("saving"), {label: "加入中…", disabled: true, tone: "busy"});
+  assert.deepEqual(collectButtonView("saved"), {label: "✓ 已加入生词本", disabled: true, tone: "done"});
+  assert.deepEqual(collectButtonView("exists"), {label: "✓ 已在生词本", disabled: true, tone: "done"});
+  assert.deepEqual(collectButtonView("error"), {label: "重试加入", disabled: false, tone: "retry"});
+  assert.equal(collectButtonView("unknown").label, "加入生词本");
+});
+
+test("initialCollectStatus uses the lookup collected flag", () => {
+  assert.equal(initialCollectStatus({collected: true}), "exists");
+  assert.equal(initialCollectStatus({collected: false}), "idle");
+  assert.equal(initialCollectStatus(null), "idle");
+});

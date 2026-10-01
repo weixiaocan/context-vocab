@@ -56,5 +56,48 @@
     return {left, top};
   }
 
-  return {normalizeWord, compactText, sentenceFromParts, calculatePopupPosition};
+  function escapeHtml(text) {
+    return String(text ?? "").replace(/[&<>"']/g, ch => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+    }[ch]));
+  }
+
+  // Sentence translation worth showing: non-empty and not just the word meaning again.
+  function sentenceTranslation(entry) {
+    const trans = compactText(entry?.trans_zh);
+    if (!trans) return "";
+    if (trans === compactText(entry?.answer_zh)) return "";
+    return trans;
+  }
+
+  // View model for the "add to vocab" button. status: idle | saving | saved | exists | error
+  function collectButtonView(status) {
+    switch (status) {
+      case "saving":
+        return {label: "加入中…", disabled: true, tone: "busy"};
+      case "saved":
+        return {label: "✓ 已加入生词本", disabled: true, tone: "done"};
+      case "exists":
+        return {label: "✓ 已在生词本", disabled: true, tone: "done"};
+      case "error":
+        return {label: "重试加入", disabled: false, tone: "retry"};
+      default:
+        return {label: "加入生词本", disabled: false, tone: "primary"};
+    }
+  }
+
+  function initialCollectStatus(entry) {
+    return entry?.collected ? "exists" : "idle";
+  }
+
+  return {
+    normalizeWord,
+    compactText,
+    sentenceFromParts,
+    calculatePopupPosition,
+    escapeHtml,
+    sentenceTranslation,
+    collectButtonView,
+    initialCollectStatus
+  };
 });

@@ -1,5 +1,13 @@
 (function () {
-  const {normalizeWord, compactText, sentenceFromParts, calculatePopupPosition} = window.VocabCardCore;
+  const {
+    normalizeWord,
+    sentenceFromParts,
+    calculatePopupPosition,
+    escapeHtml,
+    sentenceTranslation,
+    collectButtonView,
+    initialCollectStatus
+  } = window.VocabCardCore;
   let popup = null;
   let lastSelection = null;
   let lookupRequestId = 0;
@@ -64,12 +72,13 @@
     removePopup();
     popup = document.createElement("div");
     popup.className = "vocab-card-popup";
+    popup.lang = "zh-CN";
     popup.style.visibility = "hidden";
 
     if (state.loading) {
-      popup.innerHTML = `<div class="vocab-card-title">${escapeHtml(word)}</div><div class="vocab-card-muted">查词中...</div>`;
+      popup.innerHTML = popupHtml(word, `<div class="vocab-card-muted">查词中…</div>`);
     } else if (state.error) {
-      popup.innerHTML = popupHtml(word, `<div class="vocab-card-muted">${state.error}</div>`);
+      popup.innerHTML = popupHtml(word, `<div class="vocab-card-muted">${escapeHtml(state.error)}</div>`);
     } else if (!state.entry) {
       popup.innerHTML = popupHtml(word, `<div class="vocab-card-muted">查不到</div>`);
     } else {
@@ -77,6 +86,7 @@
       const audioButton = `<button class="vocab-card-audio" type="button" data-action="play" aria-label="播放 ${escapeHtml(word)} 的发音" title="${entry.audioUrl ? "音频加载中" : "使用浏览器语音播放"}" ${entry.audioUrl ? "disabled" : ""}>🔊</button>`;
       popup.innerHTML = popupHtml(word, entryBodyHtml(entry), audioButton);
       bindAudio(word, entry);
+      setCollectStatus(initialCollectStatus(entry));
       popup.querySelector('[data-action="collect"]')?.addEventListener("click", collectCurrentWord);
     }
 
@@ -86,40 +96,72 @@
   }
 
   function entryBodyHtml(entry) {
-    const meta = `<div class="vocab-card-meta">${escapeHtml(entry.phonetic || "")} ${escapeHtml(entry.partOfSpeech || "")}</div>`;
+    const metaParts = [];
+    if (entry.phonetic) metaParts.push(`<span class="vocab-card-phonetic" lang="en">${escapeHtml(entry.phonetic)}</span>`);
+    if (entry.partOfSpeech) metaParts.push(`<span class="vocab-card-pos" lang="en">${escapeHtml(entry.partOfSpeech)}</span>`);
+    const meta = metaParts.length ? `<div class="vocab-card-meta">${metaParts.join("")}</div>` : "";
+
+    const definitions = (entry.definitions || []).filter(Boolean);
+    const englishList = definitions.length
+      ? `<ol lang="en">${definitions.map(def => `<li>${escapeHtml(def)}</li>`).join("")}</ol>`
+      : `<div class="vocab-card-muted" lang="zh-CN">暂无英文释义</div>`;
     const actions = `
       <div class="vocab-card-actions">
-        <button type="button" data-action="collect" ${entry.collected ? "disabled" : ""}>${entry.collected ? "已加入" : "加入生词本"}</button>
+        <button type="button" class="vocab-card-collect" lang="zh-CN" data-action="collect"></button>
       </div>
-      <div class="vocab-card-status"></div>
+      <div class="vocab-card-error" lang="zh-CN" role="alert" hidden></div>
+      <div class="vocab-card-status" aria-live="polite"></div>
     `;
 
     if (entry.answer_zh) {
-      const definitions = (entry.definitions || []).filter(Boolean);
-      const english = definitions.length
-        ? definitions.map(def => `<li>${escapeHtml(def)}</li>`).join("")
-        : "<li>暂无释义</li>";
+      const trans = sentenceTranslation(entry);
+      const transBlock = trans
+        ? `<div class="vocab-card-trans" lang="zh-CN">
+             <div class="vocab-card-label">整句翻译</div>
+             <div class="vocab-card-trans-text">${escapeHtml(trans)}</div>
+           </div>`
+        : "";
+      const countLabel = definitions.length ? `<span class="vocab-card-count">${definitions.length}</span>` : "";
       return `
         ${meta}
-        <div class="vocab-card-zh">${escapeHtml(entry.answer_zh)}</div>
+        <div class="vocab-card-zh" lang="zh-CN">${escapeHtml(entry.answer_zh)}</div>
+        ${transBlock}
         <details class="vocab-card-en">
-          <summary>英文释义</summary>
-          <ol>${english}</ol>
+          <summary>
+            <span lang="zh-CN">英文释义</span>${countLabel}
+            <span class="vocab-card-hint" lang="zh-CN" aria-hidden="true"></span>
+            <svg class="vocab-card-chevron" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+              <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </summary>
+          ${englishList}
         </details>
-        <div class="vocab-card-trans">${escapeHtml(entry.trans_zh || "")}</div>
         ${actions}
       `;
     }
 
-    const definitions = (entry.definitions || []).filter(Boolean);
-    const english = definitions.length
-      ? definitions.map(def => `<li>${escapeHtml(def)}</li>`).join("")
-      : "<li>暂无释义</li>";
     return `
       ${meta}
-      <ol>${english}</ol>
+      <div class="vocab-card-en-plain">${englishList}</div>
       ${actions}
     `;
+  }
+
+  function setCollectStatus(status, errorText = "") {
+    const button = popup?.querySelector('[data-action="collect"]');
+    if (!button) return;
+    const view = collectButtonView(status);
+    button.disabled = view.disabled;
+    button.dataset.tone = view.tone;
+    button.setAttribute("aria-busy", status === "saving" ? "true" : "false");
+    button.innerHTML = status === "saving"
+      ? `<span class="vocab-card-spinner" aria-hidden="true"></span>${escapeHtml(view.label)}`
+      : escapeHtml(view.label);
+    const error = popup.querySelector(".vocab-card-error");
+    if (error) {
+      error.textContent = status === "error" ? errorText : "";
+      error.hidden = status !== "error";
+    }
   }
 
   function bindAudio(word, entry) {
@@ -191,7 +233,7 @@
     return `
       <button class="vocab-card-close" type="button" aria-label="Close">×</button>
       <div class="vocab-card-heading">
-        <div class="vocab-card-title">${escapeHtml(word)}</div>
+        <div class="vocab-card-title" lang="en">${escapeHtml(word)}</div>
         ${titleExtra}
       </div>
       ${body}
@@ -201,23 +243,25 @@
   async function collectCurrentWord(event) {
     event?.stopPropagation();
     if (!lastSelection || !popup) return;
-    const status = popup.querySelector(".vocab-card-status");
     const button = popup.querySelector('[data-action="collect"]');
-    if (button?.disabled) return;
-    if (button) button.disabled = true;
-    status.textContent = "入库中...";
+    if (!button || button.disabled) return;
+    const currentPopup = popup;
+    setCollectStatus("saving");
     try {
       await window.VocabCardApi.collectWord(lastSelection);
-      status.textContent = "";
-      if (button) button.textContent = "已加入";
+      if (popup !== currentPopup) return;
+      if (lastSelection.dictionaryEntry) lastSelection.dictionaryEntry.collected = true;
+      setCollectStatus("saved");
     } catch (error) {
-      status.textContent = isInvalidExtensionContext(error)
-        ? "插件已更新，请刷新页面"
-        : isNetworkError(error)
-          ? "无法连接生词本服务器"
-          : "入库失败";
-      if (button) button.disabled = false;
+      if (popup !== currentPopup) return;
+      setCollectStatus("error", collectErrorMessage(error));
     }
+  }
+
+  function collectErrorMessage(error) {
+    if (isInvalidExtensionContext(error)) return "插件已更新，请刷新页面后重试";
+    if (isNetworkError(error)) return "无法连接生词本服务器，请确认后端已启动";
+    return "加入失败，请稍后重试";
   }
 
   function isInvalidExtensionContext(error) {
@@ -261,9 +305,4 @@
     }
   }
 
-  function escapeHtml(text) {
-    return String(text || "").replace(/[&<>"']/g, ch => ({
-      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
-    }[ch]));
-  }
 })();
